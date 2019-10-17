@@ -1,0 +1,4677 @@
+// to simulate 8085 MicroProcessor Programming Kit
+
+# include <iostream.h>
+# include <graphics.h>
+# include <stdlib.h>
+# include <string.h>
+# include <stdio.h>
+# include <conio.h>
+# include <time.h>
+# include <dos.h>
+
+# define FALSE 0
+# define TRUE  1
+
+typedef unsigned char BYTE;
+typedef unsigned int  WORD;
+
+int TCHARWIDTH=8;
+int TCHARHEIGHT=8;
+
+// common utils declarations
+void clearscreen();
+void scrolltext(int,int,int,int,int);
+void tbox(int,int,int,int,int,int,int);
+void tbar(int,int,int,int,int,int);
+void thline(int,int,int,int,int);
+void tvline(int,int,int,int,int);
+void text_color(int,int);
+void cursor_off();
+void cursor_on();
+void inittextscreen();
+void credits();
+void beep();
+void quit();
+void prgscreen();
+void mainmenu();
+int  spin(int,int,int,int,int,int,int,int,int);
+int  intlen(int);
+void getkey(int);
+int  getscan(int);
+int  getascii(int);
+int  getyesno(int,int);
+int  LEFTMOUSE=1,RIGHTMOUSE=2;
+int  SINGLE_BORDER=0,DOUBLE_BORDER=1;
+int  NORMALLINE=0,EDGEDLINE=1,SOUND_ON=1;
+int  ASCIIC,SCANC,ESCC=-1,HELPMSG_LINE=25;
+int  between(int,int,int);
+int  between(long,long,long);
+time_t tim1;
+char *SCROLL_TEXT="An Intel 8085 MicroProcessor Programming Kit";
+union REGS ii;
+
+// MP8085 declarations
+void setinstructions();
+void showaddresses(WORD);
+void showregisters();
+void clearregisters();
+void browseprogram(int);
+
+// graphics declarations
+void initialize_graphics();
+void drawvarrow(int,int,int,int);
+void drawbarvarrow(int,int,int,int,int);
+void debarvarrow(int,int,int,int);
+void drawbarharrow(int,int,int,int,int);
+void debarharrow(int,int,int,int);
+void draw8085architecture();
+int  MAXX,MAXY,MIDX,MIDY;
+int  UPARROWPTR=0,DNARROWPTR=1;
+int  LTARROWPTR=0,RTARROWPTR=1;
+
+# define ESCKEY		1
+# define ENTERKEY       28
+# define BACKSPACEKEY	14
+# define SPACEBARKEY    57
+# define TABKEY		15
+# define F1KEY		59
+# define F2KEY		60
+# define F3KEY		61
+# define F4KEY		62
+# define F5KEY		63
+# define F6KEY		64
+# define F7KEY		65
+# define F8KEY		66
+# define F9KEY		67
+# define F10KEY		68
+# define LTARROWKEY	75
+# define RTARROWKEY	77
+# define UPARROWKEY	72
+# define DNARROWKEY	80
+# define INSERTKEY	82
+# define DELETEKEY	83
+# define HOMEKEY	71
+# define ENDKEY		79
+# define PGUPKEY        73
+# define PGDNKEY	81
+# define CTRLHOMEKEY	119
+# define CTRLENDKEY	117
+# define CTRLPGUPKEY    132
+# define CTRLPGDNKEY	118
+
+class STR
+{
+	private:char* str;
+	public: STR(void);
+		STR(int);
+		STR(int,char);
+		STR(char*);
+		STR(STR&);
+		~STR(void);
+		char *getstr(void);
+		void setstr(char*);
+		void setstr(STR);
+		char getchr(int);
+		void setchr(int,char);
+		STR  operator=(char*);
+		STR& operator=(STR&);
+		STR  operator+(STR);
+		int  operator==(STR);
+		int  operator!=(STR);
+};
+STR::STR(void)
+{
+	str=NULL;
+}
+STR::STR(int tlen)
+{
+	str=new char[tlen+1];
+	for(int i=0;i<tlen;i++) *(str+i)=32;
+	*(str+tlen)='\0';
+}
+STR::STR(int tlen,char c)
+{
+	str=new char[tlen+1];
+	for(int i=0;i<tlen;i++) *(str+i)=c;
+	*(str+tlen)='\0';
+}
+STR::STR(char* tstr)
+{
+	str=new char[strlen(tstr)+1];
+	strcpy(str,tstr);
+}
+STR::STR(STR& tstr) // copy constructor
+{
+	str=new char[strlen(tstr.getstr())+1];
+	strcpy(str,tstr.getstr());
+}
+STR::~STR(void)
+{
+	delete str;
+}
+char* STR::getstr(void)
+{
+	return(str);
+}
+void STR::setstr(char* sstr)
+{
+	delete str;
+	str=new char[strlen(sstr)+1];
+	strcpy(str,sstr);
+}
+void STR::setstr(STR sstr)
+{
+	delete str;
+	str=new char[strlen(sstr.getstr())+1];
+	strcpy(str,sstr.getstr());
+}
+char STR::getchr(int i)
+{
+	return(*(str+i));
+}
+void STR::setchr(int i,char c)
+{
+	*(str+i)=c;
+}
+STR STR::operator=(char* tstr)
+{
+	STR temp(tstr);
+	return(temp);
+}
+STR& STR::operator=(STR& tstr)
+{
+	if(this==&tstr) return(*this);
+	delete str;
+	str=new char[strlen(tstr.getstr())+1];
+	strcpy(str,tstr.getstr());
+	return(*this);
+}
+STR STR::operator+(STR tstr)
+{
+	int l1=strlen(str),l2=strlen(tstr.getstr()),i;
+	STR temp(l1+l2);
+	for(i=0;i<l1;i++) temp.setchr(i,getchr(i));
+	for(i=l1;i<l1+l2;i++) temp.setchr(i,tstr.getchr(i-l1));
+	return(temp);
+}
+int STR::operator==(STR tstr)
+{
+	int l1=strlen(str),l2=strlen(tstr.getstr()),i;
+	if(l1!=l2) return(FALSE);
+	for(i=0;i<l1;i++) if(getchr(i)!=tstr.getchr(i)) return(FALSE);
+	return(TRUE);
+}
+int STR::operator!=(STR tstr)
+{
+	int l1=strlen(str),l2=strlen(tstr.getstr()),i;
+	if(l1!=l2) return(TRUE);
+	for(i=0;i<l1;i++) if(getchr(i)!=tstr.getchr(i)) return(TRUE);
+	return(FALSE);
+}
+
+int len(STR tstr)
+{
+	return(strlen(tstr.getstr()));
+}
+
+STR space(int nspc)
+{
+	STR temp(nspc);
+	return(temp);
+}
+
+int asc(char c)
+{
+	return(c);
+}
+
+char chr(int n)
+{
+	return(n);
+}
+
+int isalpha(char c)
+{
+	c=c<=90?c+32:c;
+	if(c>=97&&c<=122) return(TRUE); else return(FALSE);
+}
+
+int isdigit(char c)
+{
+	if(c>=48&&c<=57) return(TRUE); else return(FALSE);
+}
+
+int islower(char c)
+{
+	if(c>=97&&c<=122) return(TRUE); else return(FALSE);
+}
+
+int isupper(char c)
+{
+	if(c>=65&&c<=90) return(TRUE); else return(FALSE);
+}
+
+int isalpha(STR tstr)
+{
+	for(int i=0;i<len(tstr);i++) if(!isalpha(tstr.getchr(i))) return(FALSE);
+	return(TRUE);
+}
+
+int isdigit(STR tstr)
+{
+	for(int i=0;i<len(tstr);i++) if(!isdigit(tstr.getchr(i))) return(FALSE);
+	return(TRUE);
+}
+
+int islower(STR tstr)
+{
+	for(int i=0;i<len(tstr);i++) if(!islower(tstr.getchr(i))) return(FALSE);
+	return(TRUE);
+}
+
+int isupper(STR tstr)
+{
+	for(int i=0;i<len(tstr);i++) if(!isupper(tstr.getchr(i))) return(FALSE);
+	return(TRUE);
+}
+
+char lower(char c)
+{
+	return(isupper(c)?c+32:c);
+}
+
+char upper(char c)
+{
+	return(islower(c)?c-32:c);
+}
+
+int empty(char c)
+{
+	return(c==32?TRUE:FALSE);
+}
+
+int empty(STR tstr)
+{
+	int i,l=len(tstr);
+	for(i=0;i<l;i++)
+	{
+		if(!empty(tstr.getchr(i)))
+			return(FALSE);
+	}
+	return(TRUE);
+}
+
+STR lower(STR tstr)
+{
+	STR temp=tstr;
+	for(int i=0;i<len(temp);i++) temp.setchr(i,lower(temp.getchr(i)));
+	return(temp);
+}
+
+STR upper(STR tstr)
+{
+	STR temp=tstr;
+	for(int i=0;i<len(temp);i++) temp.setchr(i,upper(temp.getchr(i)));
+	return(temp);
+}
+
+STR proper(STR tstr)
+{
+	int i,l1=len(tstr);
+	for(i=0;i<l1;)
+	{
+		for(;tstr.getchr(i)==32;i++);
+		tstr.setchr(i,upper(tstr.getchr(i)));
+		for(;tstr.getchr(i)!=32;i++);
+	}
+	return(tstr);
+}
+
+STR left(STR tstr,int l)
+{
+	int l1=len(tstr); l=l>l1?l1:l; l=l1<=0?0:l; STR temp(l);
+	for(int i=0;i<l;i++) temp.setchr(i,tstr.getchr(i));
+	return(temp);
+}
+
+STR right(STR tstr,int l)
+{
+	int l1=len(tstr),i=l>l1?0:l1-l; i=l1<=0?0:i; STR temp(l1-i);
+	for(int j=0;i<l1;i++,j++) temp.setchr(j,tstr.getchr(i));
+	return(temp);
+}
+
+STR substr(STR tstr,int st,int l)
+{
+	int l1=len(tstr); if(st>l1||l1<=0||l<=0||st+l<=0) return("");
+	l=st+l-1>l1?l1:st+l-1; STR temp(l-st+1);
+	for(int i=0;st<=l;st++,i++) temp.setchr(i,tstr.getchr(st-1));
+	return(temp);
+}
+
+STR padl(STR tstr,int l,char c)
+{
+	int ln=len(tstr),t=ln>l?0:l-ln; STR temp(t,c); return(temp+tstr);
+}
+
+STR padl(STR tstr,int l)
+{
+	return(padl(tstr,l,32));
+}
+
+STR padr(STR tstr,int l,char c)
+{
+	int ln=len(tstr),t=ln>l?0:l-ln; STR temp(t,c); return(tstr+temp);
+}
+
+STR padr(STR tstr,int l)
+{
+	return(padr(tstr,l,32));
+}
+
+STR padc(STR tstr,int l,char c)
+{
+	int l1=len(tstr); if(l1>l) return(tstr);
+	int t=((l-l1)%2==0?(l-l1)/2:((l-l1)/2)+1);
+	STR temp1(t,c),temp2(((t*2)+l1>l?t-1:t),c);
+	return(temp1+tstr+temp2);
+}
+
+STR padc(STR tstr,int l)
+{
+	return(padc(tstr,l,32));
+}
+
+STR ltrim(STR tstr)
+{
+	for(int i=0;tstr.getchr(i)==32;i++);
+	STR temp(tstr.getstr()+i); return(temp);
+}
+
+STR rtrim(STR tstr)
+{
+	int i,j,l1=len(tstr); for(i=l1-1;tstr.getchr(i)==32;i--); i++;
+	STR temp(i); for(j=0;j<i;j++) temp.setchr(j,tstr.getchr(j));
+	return(temp);
+}
+
+STR trim(STR tstr)
+{
+	return(rtrim(tstr));
+}
+
+STR alltrim(STR tstr)
+{
+	STR temp=ltrim(tstr);
+	return(rtrim(temp));
+}
+
+STR replicate(char c,int n)
+{
+	STR temp(n,c);
+	return(temp);
+}
+
+int at(STR tstr,STR tf,int nth)
+{
+	int i,l=len(tstr),l1=len(tf),tcnt=1;
+	for(i=1;i<=l;i++)
+		if(substr(tstr,i,l1)==tf)
+		{
+			if(tcnt>=nth)
+				return(i);
+			tcnt++;
+		}
+	return(-1);
+}
+
+int at(STR tstr,STR tf)
+{
+	return(at(tstr,tf,1));
+}
+
+int occurs(STR tstr,STR tf,int nst)
+{
+	int i,l=len(tstr),l1=len(tf),tcnt=0;
+	for(i=nst+1;i<=l;i++)
+		if(substr(tstr,i,l1)==tf)
+			tcnt++;
+	return(tcnt);
+}
+
+int occurs(STR tstr,STR tf)
+{
+	return(occurs(tstr,tf,1));
+}
+
+STR chrtran(STR tstr,STR tf,STR tr,int nth)
+{
+	STR tret="";
+	int i,l=len(tstr),l1=len(tf),tst=1,tcnt=1,replaced=FALSE;
+	for(i=1;i<=l;i++)
+		if(substr(tstr,i,l1)==tf)
+		{
+			if(tcnt>=nth)
+			{
+				tret=tret+substr(tstr,tst,i-tst);
+				tst=i+l1;
+				tret=tret+tr;
+				replaced=TRUE;
+			}
+			tcnt++;
+		}
+	if(replaced) tret=tret+substr(tstr,tst,l);
+	else if(!replaced) tret=tstr;
+	return(tret);
+}
+
+STR chrtran(STR tstr,STR tf,STR tr)
+{
+	return(chrtran(tstr,tf,tr,1));
+}
+
+// bin,dec,hex declarations
+long power(int,int);
+char hexchar(int);
+int  hexval(char);
+STR  btod(long);
+long dtob(STR);
+long dtox(STR);
+STR  xtod(long);
+STR  btox(STR);
+STR  xtob(STR);
+
+// STR utils declarations
+void errorf(STR);
+void xyprint(int,int,STR,int,int);
+void xyprint(int,int,char,int,int);
+void msgbox(STR,STR);
+void printSTR(STR);
+void printSTR(int,int,STR);
+STR  editSTR(STR,int,int,int,int,int,int);
+int  scrollmenu(int,int,int,int,int);
+
+int execute(STR,STR,STR);
+
+template <class T>
+class SLINKED
+{
+	private:
+		struct SNODE
+		{
+			T     data;
+			SNODE *next;
+		};
+		SNODE *start;
+		long  items;
+	public:
+		SLINKED(void);
+		~SLINKED(void);
+		long nitems(void);
+		void insertnode(T,long);
+		void addnode(T);
+		void deletenode(long);
+		void deleteallnodes(void);
+		T    getnode(long);
+		void setnode(T,long);
+};
+template <class T>
+SLINKED<T>::SLINKED(void)
+{
+	start=NULL;
+	items=0;
+}
+template <class T>
+SLINKED<T>::~SLINKED(void)
+{
+	deleteallnodes();
+}
+template <class T>
+long SLINKED<T>::nitems(void)
+{
+	return(items);
+}
+template <class T>
+void SLINKED<T>::insertnode(T tdata,long pos)
+{
+	if(pos<1) errorf("pos<1, SLINKED::insertnode()");
+	if(pos>items) errorf("pos>nitems, SLINKED::insertnode()");
+	SNODE *n=new SNODE;
+	n->data=tdata;
+	SNODE *tmp,*prev;
+	int i;
+	for(tmp=start,prev=start,i=0;i<pos-1;prev=tmp,tmp=tmp->next,i++);
+	n->next=tmp;
+	if(tmp==start) start=n;
+	else prev->next=n;
+	items++;
+}
+template <class T>
+void SLINKED<T>::addnode(T tdata)
+{
+	SNODE *n=new SNODE;
+	n->data=tdata;
+	n->next=NULL;
+	SNODE *tmp,*prev;
+	int i;
+	for(tmp=start,prev=start,i=0;i<items;prev=tmp,tmp=tmp->next,i++);
+	if(i==0) start=n;
+	else prev->next=n;
+	items++;
+}
+template <class T>
+void SLINKED<T>::deletenode(long pos)
+{
+	if(pos<1) errorf("pos<1, SLINKED::delnode()");
+	if(pos>items) errorf("pos>nitems, SLINKED::delnode()");
+	SNODE *tmp,*prev;
+	int i;
+	for(tmp=start,prev=start,i=0;i<pos-1;prev=tmp,tmp=tmp->next,i++);
+	prev->next=tmp->next;
+	if(tmp==start) start=start->next;
+	delete tmp;
+	items--;
+}
+template <class T>
+void SLINKED<T>::deleteallnodes(void)
+{
+	int titcnt=items;
+	for(int i=titcnt;i>=1;i--) deletenode(i);
+}
+template <class T>
+T SLINKED<T>::getnode(long pos)
+{
+	if(pos<1) errorf("pos<1, SLINKED::getnode()");
+	if(pos>items) errorf("pos>nitems, SLINKED::getnode()");
+	SNODE *tmp;
+	int i;
+	for(tmp=start,i=0;i<pos-1;tmp=tmp->next,i++);
+	return(tmp->data);
+}
+template <class T>
+void SLINKED<T>::setnode(T tdata,long pos)
+{
+	if(pos<1) errorf("pos<1, SLINKED::setnode()");
+	if(pos>items) errorf("pos>nitems, SLINKED::setnode()");
+	SNODE *tmp;
+	int i;
+	for(tmp=start,i=0;i<pos-1;tmp=tmp->next,i++);
+	tmp->data=tdata;
+}
+
+template <class T>
+class STACK
+{
+	private:
+		SLINKED<T> slink;
+		long       top;
+	public:
+		STACK(void);
+		~STACK(void);
+		STACK(T);
+		long ntop(void);
+		void pushnode(T);
+		void popnode(void);
+		void popallnodes(void);
+		T    getnode(long);
+		void setnode(T,long);
+};
+template <class T>
+STACK<T>::STACK(void)
+{
+	top=0;
+}
+template <class T>
+STACK<T>::~STACK(void)
+{
+	popallnodes();
+}
+template <class T>
+STACK<T>::STACK(T tdata)
+{
+	pushnode(tdata);
+}
+template <class T>
+long STACK<T>::ntop(void)
+{
+	return(top);
+}
+template <class T>
+void STACK<T>::pushnode(T tdata)
+{
+	slink.addnode(tdata);
+	top++;
+}
+template <class T>
+void STACK<T>::popnode(void)
+{
+	slink.deletenode(top);
+	top--;
+}
+template <class T>
+void STACK<T>::popallnodes(void)
+{
+	int ttop=top;
+	for(int i=ttop;i>=1;i--) popnode();
+}
+template <class T>
+T STACK<T>::getnode(long pos)
+{
+	if(pos<1) errorf("pos<1, STACK::getnode()");
+	if(pos>top) errorf("pos>ntop, STACK::getnode()");
+	return(slink.getnode(pos));
+}
+template <class T>
+void STACK<T>::setnode(T tdata,long pos)
+{
+	if(pos<1) errorf("pos<1, STACK::getnode()");
+	if(pos>top) errorf("pos>ntop, STACK::getnode()");
+	slink.setnode(tdata,pos);
+}
+
+class MOUSE
+{
+	private:
+		union REGS ii;
+	public:
+		void initialize(void);
+		void showpointer(void);
+		void hidepointer(void);
+		void getpointer(int*,int*,int*);
+		void setpointer(int,int);
+		void sethlimits(int,int);
+		void setvlimits(int,int);
+		void setrectlimits(int,int,int,int);
+};
+void MOUSE::initialize(void)
+{
+	ii.x.ax=0;
+	int86(0x33,&ii,&ii);
+	if(ii.x.ax==0)
+		errorf("Cannot initialize mouse");
+}
+void MOUSE::showpointer(void)
+{
+	ii.x.ax=1;
+	int86(0x33,&ii,&ii);
+}
+void MOUSE::hidepointer(void)
+{
+	ii.x.ax=2;
+	int86(0x33,&ii,&ii);
+}
+void MOUSE::getpointer(int *tb,int *tx,int *ty)
+{
+	ii.x.ax=3;
+	int86(0x33,&ii,&ii);
+	*tb=ii.x.bx;
+	*tx=ii.x.cx;
+	*ty=ii.x.dx;
+}
+void MOUSE::setpointer(int tx,int ty)
+{
+	ii.x.ax=4;
+	ii.x.cx=tx;
+	ii.x.dx=ty;
+	int86(0x33,&ii,&ii);
+}
+void MOUSE::sethlimits(int hl,int hr)
+{
+	ii.x.ax=7;
+	ii.x.cx=hl;
+	ii.x.dx=hr;
+	int86(0x33,&ii,&ii);
+}
+void MOUSE::setvlimits(int vt,int vb)
+{
+	ii.x.ax=8;
+	ii.x.cx=vt;
+	ii.x.dx=vb;
+	int86(0x33,&ii,&ii);
+}
+void MOUSE::setrectlimits(int left,int top,int right,int bottom)
+{
+	sethlimits(left,right);
+	setvlimits(top,bottom);
+}
+
+MOUSE gmouse,tmouse;
+
+// common utils definitions
+int between(int val,int start,int end)
+{
+	if(val>=start&&val<=end) return(TRUE);
+	else return(FALSE);
+}
+
+int between(long val,long start,long end)
+{
+	if(val>=start&&val<=end) return(TRUE);
+	else return(FALSE);
+}
+
+void getkey()
+{
+	while(!kbhit());
+	ii.h.ah=0;
+	int86(22,&ii,&ii);
+	ASCIIC=ii.h.al;
+	SCANC=ii.h.ah;
+}
+
+void quit()
+{
+	//credits();
+	clearscreen();
+	cursor_on();
+	exit(0);
+}
+
+void beep()
+{
+	sound(512);
+	delay(120);
+	nosound();
+}
+
+void inittextscreen()
+{
+	textmode(C80);
+	clearscreen();
+}
+
+void clearscreen()
+{
+	text_color(0,7);
+	clrscr();
+}
+
+int readscrnchar(int col,int row)
+{
+	gotoxy(col,row);
+	ii.h.ah=8;
+	ii.h.bh=0;
+	int86(0x10,&ii,&ii);
+	return(ii.h.al);
+}
+
+int readscrnchar(int page,char *attr)
+{
+	ii.h.ah=8;
+	ii.h.bh=page;
+	int86(0x10,&ii,&ii);
+	*attr=ii.h.ah;
+	return(ii.h.al);
+}
+
+STR readscrnstr(int col,int row,int len)
+{
+	STR tstr(len);
+	for(int i=0;i<len;i++) tstr.setchr(i,readscrnchar(col+i,row));
+	return(tstr);
+}
+
+void getkey(int wait)
+{
+	while(!kbhit())
+	{
+		if(wait)
+		{
+			time(&tim1);
+			xyprint(56,1,ctime(&tim1),0,2);
+			scrolltext(1,10,53,0,15);
+		}
+	}
+	ii.h.ah=0;
+	int86(22,&ii,&ii);
+	ASCIIC=ii.h.al;
+	SCANC=ii.h.ah;
+}
+
+int getscan(int wait)
+{
+	while(!kbhit())
+	{
+		if(wait)
+		{
+			time(&tim1);
+			xyprint(56,1,ctime(&tim1),0,2);
+			scrolltext(1,10,53,0,15);
+		}
+	}
+	ii.h.ah=0;
+	int86(22,&ii,&ii);
+	return(ii.h.ah);
+}
+
+int getascii(int wait)
+{
+	while(!kbhit())
+	{
+		if(wait)
+		{
+			time(&tim1);
+			xyprint(56,1,ctime(&tim1),0,2);
+			scrolltext(1,10,53,0,15);
+		}
+	}
+	ii.h.ah=0;
+	int86(22,&ii,&ii);
+	return(ii.h.al);
+}
+
+void scrolltext(int row,int lcol,int rcol,int bgc,int fgc)
+{
+	static int scrlss=0,scrlse=0,xx=rcol+5;
+	int i,j,scrllen=strlen(SCROLL_TEXT),xt;
+	text_color(bgc,fgc);
+	if(xx<=lcol-scrllen)
+	{
+		xx=rcol+3;
+		scrlss=0;
+		scrlse=0;
+		gotoxy(lcol,row);
+	}
+	xx--;
+	delay(70);
+	if(xx>rcol)
+		return;
+	xt=xx>=lcol?xx:lcol;
+	for(i=xt,j=scrlss;j<=scrlse;i++,j++)
+	{
+		gotoxy(i,row);
+		cprintf("%c",SCROLL_TEXT[j]);
+	}
+	scrlse++;
+	if(scrlse>=scrllen)
+		scrlse=scrllen;
+	if(xx<=lcol)
+	{
+		scrlss++;
+		if(scrlss>scrllen)
+			scrlss=0;
+	}
+}
+
+void tbox(int left,int top,int right,int bottom,int border,int bgc,int fgc)
+{
+	int tl,tr,bl,br,hl,vl;
+	int i;
+	if(border==SINGLE_BORDER)
+	{
+		tl=218;
+		tr=191;
+		bl=192;
+		br=217;
+		hl=196;
+		vl=179;
+	}
+	else if(border==DOUBLE_BORDER)
+	{
+		tl=201;
+		tr=187;
+		bl=200;
+		br=188;
+		hl=205;
+		vl=186;
+	}
+	else return;
+	text_color(bgc,fgc);
+	gotoxy(left,top);
+	cprintf("%c",tl);
+	gotoxy(right,top);
+	cprintf("%c",tr);
+	gotoxy(left,bottom);
+	cprintf("%c",bl);
+	gotoxy(right,bottom);
+	cprintf("%c",br);
+	for(i=top+1;i<bottom;i++)
+	{
+		gotoxy(left,i);
+		cprintf("%c",vl);
+		gotoxy(right,i);
+		cprintf("%c",vl);
+	}
+	for(i=left+1;i<right;i++)
+	{
+		gotoxy(i,top);
+		cprintf("%c",hl);
+		gotoxy(i,bottom);
+		cprintf("%c",hl);
+	}
+}
+
+void text_color(int bgc,int fgc)
+{
+	textbackground(bgc);
+	textcolor(fgc);
+}
+
+void cursor_off()
+{
+	_setcursortype(_NOCURSOR);
+}
+
+void cursor_on()
+{
+	_setcursortype(_NORMALCURSOR);
+}
+
+void tbar(int left,int top,int right,int bottom,int bgc,int fgc)
+{
+	int i;
+	text_color(bgc,fgc);
+	for(i=top;i<=bottom;i++)
+	{
+		gotoxy(left,i);
+		cprintf("%*s",right-left+1," ");
+	}
+}
+
+void xyprint(int col,int row,char c,int bgc,int fgc)
+{
+	text_color(bgc,fgc);
+	gotoxy(col,row);
+	cprintf("%c",c);
+}
+
+void thline(int line,int left,int right,int border,int type,int bgc,int fgc)
+{
+	int i;
+	char l,r,h;
+	text_color(bgc,fgc);
+	if(border==SINGLE_BORDER)
+	{
+		l=195;
+		r=180;
+		h=196;
+	}
+	else if(border==DOUBLE_BORDER)
+	{
+		l=204;
+		r=185;
+		h=205;
+	}
+	for(i=left;i<=right;i++)
+	{
+		gotoxy(i,line);
+		cprintf("%c",h);
+	}
+	if(type==EDGEDLINE)
+	{
+		gotoxy(left,line);
+		cprintf("%c",l);
+		gotoxy(right,line);
+		cprintf("%c",r);
+	}
+}
+
+void tvline(int col,int top,int bottom,int border,int type,int bgc,int fgc)
+{
+	int i;
+	char t,b,v;
+	text_color(bgc,fgc);
+	if(border==SINGLE_BORDER)
+	{
+		t=194;
+		b=193;
+		v=179;
+	}
+	else if(border==DOUBLE_BORDER)
+	{
+		t=203;
+		b=202;
+		v=186;
+	}
+	for(i=top;i<=bottom;i++)
+	{
+		gotoxy(col,i);
+		cprintf("%c",v);
+	}
+	if(type==EDGEDLINE)
+	{
+		gotoxy(col,top);
+		cprintf("%c",t);
+		gotoxy(col,bottom);
+		cprintf("%c",b);
+	}
+}
+
+void credits()
+{
+	int i,j,x,y,l,se,left=20,top=9,right=61,bottom=15,a=0,c,snd,t;
+	char str[50];
+	cursor_off();
+	text_color(0,14);
+	clrscr();
+	tbox(3,1,79,25,DOUBLE_BORDER,0,14);
+	text_color(1,15);
+	gotoxy(3,1);
+	cprintf("");
+	delay(100);
+	strcpy(str,"A Software Developed by,");
+	l=strlen(str);
+	text_color(0,10);
+	for(snd=0,i=0;i<l;i++)
+	{
+		for(y=23;y>=10;y--)
+		{
+			if(str[i]!=32)
+			{
+				gotoxy(((80-l)/2)+i,y);
+				cprintf("%c",str[i]);
+				gotoxy(((80-l)/2)+i,y+1);
+				cprintf("%c",32);
+				snd=i%2==0?1000:12000;
+				if(SOUND_ON) sound(snd);
+				delay(6);
+				if(SOUND_ON) nosound();
+			}
+			else delay(8);
+		}
+	}
+	delay(1000);
+	strcpy( str,"A.Prabu, B.E.,                  ");
+	l=strlen(str);
+	textcolor(15);
+	for(t=0,j=0,snd=0,se=0,x=78;x>=31;x--,se++,snd+=100,j++)
+	{
+		if(se>=l) se=l;
+		if(j%2&&j<32) t++;
+		for(i=0;i<=se;i++)
+		{
+			gotoxy(x+i,11);
+			cprintf("%c",str[i]);
+		}
+		if(SOUND_ON) sound(snd);
+		if(snd>600) delay(4);
+		else delay(8);
+		if(SOUND_ON) nosound();
+	}
+	gotoxy(31,11);
+	cprintf(" A.Prabu, B.E., ");
+	delay(30);
+	gotoxy(31,11);
+	cprintf("  A.Prabu, B.E., ");
+	delay(30);
+	gotoxy(31,11);
+	cprintf("  A.Prabu, B.E., ");
+	delay(30);
+	gotoxy(31,11);
+	cprintf(" A.Prabu, B.E., ");
+	delay(50);
+	gotoxy(31,11);
+	cprintf("  A.Prabu, B.E., ");
+	delay(800);
+	strcpy(str,"Hindusthan College of Engg. & Tech.,");
+	l=strlen(str);
+	textcolor(12);
+	for(snd=1500,x=23,i=0;i<l;i++,x++,snd-=20)
+	{
+		gotoxy(x,13);
+		cprintf("%c",str[i]);
+		if(SOUND_ON) sound(snd);
+		delay(20);
+		if(SOUND_ON) nosound();
+		gotoxy(23,13);
+		cprintf("%*s",l," ");
+	}
+	delay(20);
+	gotoxy(23,13);
+	cprintf("%s",str);
+	delay(500);
+	strcpy(str,"Coimbatore - 32.");
+	l=strlen(str);
+	textcolor(7);
+	for(x=32,i=0;i<l;i++,x++)
+	{
+		gotoxy(x,14);
+		cprintf("%c",str[i]);
+		delay(30);
+	}
+	textcolor(14);//box
+	for(snd=0,i=left+1;i<=right-1;i++,snd+=20)
+	{
+		gotoxy(i,top);
+		cprintf("%c",205);
+		if(SOUND_ON) sound(snd);
+		delay(15);
+		if(SOUND_ON) nosound();
+	}
+	gotoxy(right,top);
+	cprintf("%c",187);
+	if(SOUND_ON) sound(snd);
+	delay(15);
+	if(SOUND_ON) nosound();
+	for(i=top+1;i<=bottom-1;i++,snd+=20)
+	{
+		gotoxy(right,i);
+		cprintf("%c",186);
+		if(SOUND_ON) sound(snd);
+		delay(30);
+		if(SOUND_ON) nosound();
+	}
+	gotoxy(right,bottom);
+	cprintf("%c",188);
+	if(SOUND_ON) sound(snd);
+	delay(15);
+	if(SOUND_ON) nosound();
+	for(i=right-1;i>left;i--,snd+=20)
+	{
+		gotoxy(i,bottom);
+		cprintf("%c",205);
+		if(SOUND_ON) sound(snd);
+		delay(15);
+		if(SOUND_ON) nosound();
+	}
+	gotoxy(left,bottom);
+	cprintf("%c",200);
+	if(SOUND_ON) sound(snd);
+	delay(15);
+	if(SOUND_ON) nosound();
+	for(i=bottom-1;i>top;i--,snd+=20)
+	{
+		gotoxy(left,i);
+		cprintf("%c",186);
+		if(SOUND_ON) sound(snd);
+		delay(30);
+		if(SOUND_ON) nosound();
+	}
+	gotoxy(left,top);
+	cprintf("%c",201);
+	text_color(0,15);
+	gotoxy(25,18);
+	cprintf("   Web: www.aprabu.8m.com");
+	gotoxy(25,19);
+	cprintf("E-mail: cincoutprabu @ yahoo.com");
+	gotoxy(25,20);
+	cprintf("        cppprabu @ rediffmail.com");
+	delay(1000);
+	strcpy(str,"Hindusthan College of Engg. & Tech.,");
+	l=strlen(str);
+	c=1;
+	t=1;
+	while(a!=1)
+	{
+		while(!kbhit())
+		{
+			delay(300);
+			textcolor(c);
+			if(t%2!=0)
+			{
+				for(snd=1,x=23,i=0;i<l;i++,x++,snd+=5)
+				{
+					gotoxy(x,13);
+					cprintf("%c",str[i]);
+					if(SOUND_ON) sound(snd);
+					delay(20);
+					if(SOUND_ON) nosound();
+					gotoxy(23,13);
+				}
+			}
+			else
+			{
+				for(x=23+l,snd=200,i=l;i>=0;i--,x--,snd-=5)
+				{
+					gotoxy(x,13);
+					cprintf("%c",str[i]);
+					if(SOUND_ON) sound(snd);
+					delay(20);
+					if(SOUND_ON) nosound();
+					gotoxy(23,13);
+				}
+			}
+			c++;
+			if(c>14) c=1;
+			if(c==7) c++;
+			if(c==8) c++;
+			t++;
+		}
+		ii.h.ah=0;
+		int86(22,&ii,&ii);
+		a=ii.h.ah;
+	}
+	clearscreen();
+}
+
+int getyesno(int col,int row,int bgc,int fgc)
+{
+	int key=0,n=1;
+	do
+	{
+		text_color(bgc,fgc);
+		gotoxy(col,row);
+		cprintf(" Yes   No ");
+		text_color(6,15);
+		if(n==1)
+		{
+			gotoxy(col,row);
+			cprintf(" Yes ");
+		}
+		else
+		{
+			gotoxy(col+6,row);
+			cprintf(" No ");
+		}
+		key=getscan(0);
+		if(key==1) return(0);
+		if(key==21) return(1);
+		if(key==49) return(2);
+		if(key==LTARROWKEY||key==UPARROWKEY||
+		   key==RTARROWKEY||key==DNARROWKEY) n++;
+		if(n>2) n=1;
+	}while(key!=28&&key!=57);
+	text_color(6,15);
+	if(n==1)
+	{
+		gotoxy(col,row);
+		cprintf(" Yes ");
+	}
+	else
+	{
+		gotoxy(col+6,row);
+		cprintf(" No ");
+	}
+	return(n);
+}
+
+int intlen(int n)
+{
+	int l=0;
+	while(n!=0)
+	{
+		l++;
+		n/=10;
+	}
+	return(l);
+}
+
+int spin(int min,int max,int ini,int inc,int len,int col,int row,int bgc,int fgc)
+{
+	int n=ini,key=0;
+	if(n<min) n=min;
+	if(n>max) n=max;
+	text_color(bgc,fgc);
+	gotoxy(col,row);
+	cprintf("%*d",len,n);
+	while(key!=28&&key!=1)
+	{
+		if(intlen(n)<len)
+		{
+			gotoxy(col,row);
+			cprintf("%*s",len-intlen(n),"0");
+		}
+		key=getscan(0);
+		if(key==72) n+=inc;
+		if(key==80) n-=inc;
+		if(n<=min)  n=min;
+		if(n>=max)  n=max;
+		text_color(bgc,fgc);
+		gotoxy(col,row);
+		cprintf("%*d",len,n);
+	}
+	text_color(fgc,bgc);
+	gotoxy(col,row);
+	cprintf("%*d",len,n);
+	if(intlen(n)<len)
+	{
+		gotoxy(col,row);
+		cprintf("%*s",len-intlen(n),"0");
+	}
+	return(n);
+}
+
+// STR utils definitions
+void msgbox(STR str,STR tit)
+{
+	int l=len(str),x=((80-l)/2)-2,y=((25-(l/50))/2)-2,i;
+	char buffer[4096];
+	gettext(1,1,80,25,buffer);
+	tbar(x,y,x+l+4,y+4,0,0);
+	tbox(x,y,x+l+5,y+4,DOUBLE_BORDER,0,3);
+	for(i=x;i<=x+l+5;i++)
+	{
+		gotoxy(i,y);
+		cprintf("%c",219);
+	}
+	textbackground(3);
+	textcolor(0);
+	gotoxy(((80-len(tit))/2)+1,y);
+	cprintf("%s",tit);
+	textbackground(0);
+	textcolor(15);
+	gotoxy(x+3,y+2);
+	cprintf("%s",str);
+	beep();
+	getch();
+	puttext(1,1,80,25,buffer);
+}
+
+int UPPERONLY=0;
+int LOWERONLY=1;
+int NUMBERONLY=3;
+int CHARANDNUM=4;
+int UPPERANDNUM=5;
+int LOWERANDNUM=6;
+int ANYCHAR=7;
+
+STR editSTR(STR ts,int style,int col,int row,int bgc,int fgc,int *retv)
+{
+	int c,sc,l,ptr=0,j;
+	cursor_on();
+	text_color(bgc,fgc);
+	gotoxy(col,row);
+	printSTR(ts);
+	gotoxy(col,row);
+	l=len(ts)-1;
+	int flag;
+	int tmpflag=1;
+	while(tmpflag)
+	{
+		getkey(0);
+		c=ASCIIC;
+		sc=SCANC;
+		if(sc==ESCKEY||
+		   sc==ENTERKEY||
+		   sc==UPARROWKEY||
+		   sc==DNARROWKEY||
+		   sc==PGUPKEY||
+		   sc==PGDNKEY||
+		   sc==CTRLHOMEKEY||
+		   sc==CTRLENDKEY||
+		   sc==CTRLPGUPKEY||
+		   sc==CTRLPGDNKEY) break;
+		if(ASCIIC==0&&SCANC==TABKEY) break;
+		if(SCANC==TABKEY) break;
+		if((ASCIIC=='A'-64&&SCANC==30)||
+		   (ASCIIC=='I'-64&&SCANC==23)||
+		   (ASCIIC=='D'-64&&SCANC==32)||
+		   (ASCIIC=='R'-64&&SCANC==19)||
+		   (ASCIIC=='T'-64&&SCANC==20)||
+		   (ASCIIC=='L'-64&&SCANC==38)||
+		   (ASCIIC=='Q'-64&&SCANC==16)||
+		   (ASCIIC=='E'-64&&SCANC==18)||
+		   (ASCIIC=='Z'-64&&SCANC==44)) break;
+		flag=FALSE;
+		if(style==UPPERONLY)
+		{
+			if(islower(c)) c=upper(c);
+			if(isupper(c)) flag=TRUE;
+			if(c==32) flag=TRUE;
+		}
+		else if(style==LOWERONLY)
+		{
+			if(isupper(c)) c=lower(c);
+			if(islower(c)) flag=TRUE;
+			if(c==32) flag=TRUE;
+		}
+		else if(style==NUMBERONLY)
+		{
+			if(isdigit(c)) flag=TRUE;
+		}
+		else if(style==CHARANDNUM)
+		{
+			if(isdigit(c)||isalpha(c)) flag=TRUE;
+			if(c==32) flag=TRUE;
+		}
+		else if(style==UPPERANDNUM)
+		{
+			if(islower(c)) c=upper(c);
+			if(isdigit(c)||isupper(c)) flag=TRUE;
+			if(c==32) flag=TRUE;
+		}
+		else if(style==LOWERANDNUM)
+		{
+			if(isupper(c)) c=lower(c);
+			if(isdigit(c)||islower(c)) flag=TRUE;
+			if(c==32) flag=TRUE;
+		}
+		else if(style==ANYCHAR)
+		{
+			if(between(c,32,127)) flag=TRUE;
+			if(c==32) flag=TRUE;
+		}
+		if(flag==TRUE)
+		{
+			ptr++;
+			for(j=l;j>=ptr;j--)
+				ts.setchr(j,ts.getchr(j-1));
+			ts.setchr(ptr-1,c);
+		}
+		if(sc==BACKSPACEKEY&&ptr>=1)
+		{
+			ptr--;
+			for(j=ptr;j<l;j++)
+				ts.setchr(j,ts.getchr(j+1));
+		}
+		if(c==0)
+		{
+			if(sc==LTARROWKEY&&ptr>=1) ptr--;
+			if(sc==RTARROWKEY&&ptr<l) ptr++;
+			if(sc==HOMEKEY) ptr=0;
+			if(sc==ENDKEY) ptr=len(alltrim(ts));
+			if(sc==DELETEKEY)
+			{
+				for(j=ptr;j<l;j++)
+					ts.setchr(j,ts.getchr(j+1));
+				ts.setchr(l,32);
+			}
+		}
+		gotoxy(col,row);
+		printSTR(ts);
+		gotoxy(col+ptr,row);
+		if(ptr>l)
+		{
+			break;
+		}
+	}
+	cursor_off();
+	if(ptr>l) *retv=0;
+	else *retv=sc;
+	return(ts);
+}
+
+void xyprint(int col,int row,STR tstr,int bgc,int fgc)
+{
+	text_color(bgc,fgc);
+	gotoxy(col,row);
+	cprintf("%s",tstr.getstr());
+}
+
+void printSTR(STR tstr)
+{
+	cprintf("%s",tstr.getstr());
+}
+
+void printSTR(int col,int row,STR tstr)
+{
+	gotoxy(col,row);
+	cprintf("%s",tstr.getstr());
+}
+
+void errorf(STR errstr)
+{
+	msgbox(errstr,"Error");
+	quit();
+}
+
+long power(int b,int e)
+{
+	long ans=1;
+	for(int i=1;i<=e;i++) ans*=b;
+	return(ans);
+}
+
+char hexchar(int d)
+{
+	if(d<10) return(48+d);
+	else return(65+d-10);
+}
+
+int  hexval(char c)
+{
+	c=upper(c);
+	if(c>=65) return(c-65+10);
+	else return(c-48);
+}
+
+long btod(STR bin)
+{
+	long dec=0;
+	int i,l=len(bin);
+	for(i=0;i<l;i++) dec+=((bin.getchr(l-1-i)=='1'?1:0)*power(2,i));
+	return(dec);
+}
+
+STR dtob(long dec)
+{
+	int i=0;
+	char bin[100];
+	while(dec!=0)
+	{
+		bin[i++]=dec%2==1?'1':'0';
+		dec/=2;
+	}
+	bin[i]='\0';
+	strrev(bin);
+	STR tstr=bin;
+	return(tstr);
+}
+
+STR dtox(long dec)
+{
+	char str[5];
+	int i=0,t;
+	while(dec!=0)
+	{
+		t=dec%16;
+		str[i++]=hexchar(t);
+		dec/=16;
+	}
+	str[i]='\0';
+	strrev(str);
+	STR tstr(str);
+	return(tstr);
+}
+
+long xtod(STR hex)
+{
+	hex=alltrim(hex);
+	int i,l=len(hex);
+	long dec=0;
+	for(i=l-1;i>=0;i--)
+		dec+=(hexval(hex.getchr(i)))*power(16,l-i-1);
+	return(dec);
+}
+
+STR btox(STR bin)
+{
+	long dec=btod(bin);
+	return(dtox(dec));
+}
+
+STR xtob(STR hex)
+{
+	long dec=xtod(hex);
+	return(dtob(dec));
+}
+
+STR bytetox(BYTE dec)
+{
+	STR tstr=dtox(dec);
+	tstr=replicate('0',2-len(tstr))+tstr;
+	return(tstr);
+}
+
+STR wordtox(WORD dec)
+{
+	STR tstr=dtox(dec);
+	tstr=replicate('0',4-len(tstr))+tstr;
+	return(tstr);
+}
+
+STR bytetob(BYTE dec)
+{
+	STR tstr=dtob(dec);
+	tstr=replicate('0',8-len(tstr))+tstr;
+	return(tstr);
+}
+
+STR wordtob(WORD dec)
+{
+	STR tstr=dtob(dec);
+	tstr=replicate('0',16-len(tstr))+tstr;
+	return(tstr);
+}
+
+int isvalidbinary(STR bin)
+{
+	int i,l=len(bin);
+	for(i=0;i<l;i++) if(bin.getchr(i)!='1'&&bin.getchr(i)!='0') return(FALSE);
+	return(TRUE);
+}
+
+// graphics definitions
+void initialize_graphics()
+{
+	int gd=VGA,gm=VGAHI;
+	initgraph(&gd,&gm,"c:\\tc\\bgi");
+	int err=graphresult();
+	if(err!=grOk) errorf("Graphics not initialized");
+	MAXX=getmaxx(); MAXY=getmaxy();
+	MIDX=MAXX/2; MIDY=MAXY/2;
+}
+
+void draw3dghline(int row,int left,int width)
+{
+	setcolor(15);
+	line(left,row,left+width,row);
+	setcolor(8);
+	line(left,row+1,left+width,row+1);
+}
+
+void draw3dgvline(int col,int top,int height)
+{
+	setcolor(15);
+	line(col,top,col,top+height);
+	setcolor(8);
+	line(col+1,top,col+1,top+height);
+}
+
+void drawvarrow(int x,int y,int height,int type)
+{
+	line(x,y,x,y+height);
+	if(type==UPARROWPTR)
+	{
+		line(x,y,x-4,y+4);
+		line(x,y,x+4,y+4);
+	}
+	else if(type==DNARROWPTR)
+	{
+		line(x,y+height,x-4,y+height-4);
+		line(x,y+height,x+4,y+height-4);
+	}
+}
+
+void debarvarrow(int x,int y,int width,int height)
+{
+	drawbarvarrow(x,y,width,10,UPARROWPTR);
+	line(x+(width/3),y+10,x+(width/3),y+(height-10));
+	line(x+width-(width/3),y+10,x+width-(width/3),y+(height-10));
+	drawbarvarrow(x,y+(height-10),width,10,DNARROWPTR);
+}
+
+void drawbarvarrow(int x,int y,int width,int height,int type)
+{
+	if(type==UPARROWPTR)
+	{
+		line(x+(width/2),y,x,y+height);
+		line(x+(width/2),y,x+width,y+height);
+		line(x,y+height,x+(width/3),y+height);
+		line(x+width,y+height,x+width-(width/3),y+height);
+	}
+	else if(type==DNARROWPTR)
+	{
+		line(x,y,x+(width/3),y);
+		line(x+width,y,x+width-(width/3),y);
+		line(x,y,x+(width/2),y+width);
+		line(x+width,y,x+(width/2),y+width);
+	}
+}
+
+void debarharrow(int x,int y,int width,int height)
+{
+	drawbarharrow(x,y,10,height,LTARROWPTR);
+	line(x+10,y+(height/3),x+width-20,y+(height/3));
+	line(x+10,y+height-(height/3),x+width-20,y+height-(height/3));
+	drawbarharrow(x+width-20,y,10,height,RTARROWPTR);
+}
+
+void drawbarharrow(int x,int y,int width,int height,int type)
+{
+	if(type==LTARROWPTR)
+	{
+		line(x+width,y,x,y+(height/2));
+		line(x+width,y+height,x,y+(height/2));
+		line(x+width,y,x+width,y+(height/3));
+		line(x+width,y+height,x+width,y+height-(height/3));
+	}
+	else if(type==RTARROWPTR)
+	{
+		line(x,y,x+width,y+(height/2));
+		line(x,y+height,x+width,y+(height/2));
+		line(x,y,x,y+(height/3));
+		line(x,y+height,x,y+height-(height/3));
+	}
+}
+
+// dtr instruction functions
+void MOVREGREG();
+void MOVREGMEM();
+void MOVMEMREG();
+void MVIREGD08();
+void MVIMEMD08();
+void LDA();
+void LDAX();
+void LXI();
+void LHLD();
+void STA();
+void STAX();
+void SHLD();
+void SPHL();
+void XCHG();
+void XTHL();
+void PUSHREG();
+void PUSHPSW();
+void POPREG();
+void POPPSW();
+void IN();
+void OUT();
+// art instruction functions
+void ADDREG();
+void ADDMEM();
+void ADI();
+void ADCREG();
+void ADCMEM();
+void ACI();
+void DAA();
+void DAD();
+void SUBREG();
+void SUBMEM();
+void SUI();
+void SBBREG();
+void SBBMEM();
+void SBI();
+void INRREG();
+void INRMEM();
+void INX();
+void DCRREG();
+void DCRMEM();
+void DCX();
+// log instruction functions
+void ANAREG();
+void ANAMEM();
+void ANI();
+void ORAREG();
+void ORAMEM();
+void ORI();
+void XRAREG();
+void XRAMEM();
+void XRI();
+void CMPREG();
+void CMPMEM();
+void CPI();
+void CMA();
+void CMC();
+void STC();
+void RLC();
+void RAL();
+void RRC();
+void RAR();
+// brn instruction functions
+void JMP();
+void JXX();
+void CALL();
+void CXX();
+void RET();
+void RXX();
+void RST();
+void PCHL();
+// mcl instruction functions
+void SIM();
+void RIM();
+void DI();
+void EI();
+void HLT();
+void NOP();
+
+// MP8085 definitions
+// instruction group
+# define DTR '1'
+# define ART '2'
+# define LOG '3'
+# define BRN '4'
+# define MCL '5'
+
+// operand type
+# define SPC 'a'  // empty operand
+# define REG 'b'  // A,B,C,D,E,H,L
+# define RPX 'c'  // BC,DE,HL,SP
+# define RP1 'd'  // BC,DE
+# define RP2 'e'  // BC,DE,HL
+# define MEM 'f'  // M
+# define D08 'g'  // hex <= FF
+# define D16 'h'  // hex <= FFFF
+# define PSW 'j'  // PSW
+# define NNN 'k'  // 0,1,2,3,4,5,6,7
+
+class INSTRUCTION
+{
+	private:
+		char group;
+		STR  mnemonic;
+		char opr1type;
+		char opr2type;
+		STR  hexcode;
+	public:
+		void (*instrfunc)();
+		INSTRUCTION();
+		INSTRUCTION(char,STR,char,char,STR,void (*)());
+		void setv(char,STR,char,char,STR,void (*)());
+		char getgroup();
+		STR  getmnemonic();
+		char getopr1type();
+		char getopr2type();
+		STR  gethexcode();
+};
+INSTRUCTION::INSTRUCTION()
+{
+	group=FALSE;
+}
+INSTRUCTION::INSTRUCTION(char g,STR oc,char o1t,char o2t,STR hc,void (*fptr)())
+{
+	group=g;
+	mnemonic=oc;
+	opr1type=o1t;
+	opr2type=o2t;
+	hexcode=hc;
+	instrfunc=fptr;
+}
+void INSTRUCTION::setv(char g,STR oc,char o1t,char o2t,STR hc,void (*fptr)())
+{
+	group=g;
+	mnemonic=oc;
+	opr1type=o1t;
+	opr2type=o2t;
+	hexcode=hc;
+	instrfunc=fptr;
+}
+char INSTRUCTION::getgroup()
+{
+	return(group);
+}
+STR INSTRUCTION::getmnemonic()
+{
+	return(mnemonic);
+}
+char INSTRUCTION::getopr1type()
+{
+	return(opr1type);
+}
+char INSTRUCTION::getopr2type()
+{
+	return(opr2type);
+}
+STR INSTRUCTION::gethexcode()
+{
+	return(hexcode);
+}
+
+int nDDDVAL=7;
+STR DDDVAL[]={"B","C","D","E","H","L","A"};
+int nSSSVAL=7;
+STR SSSVAL[]={"B","C","D","E","H","L","A"};
+int nRPVAL=4;
+STR  RPVAL[]={"BC","DE","HL","SP"};
+int nCCCVAL=8;
+STR CCCVAL[]={"NZ","Z","NC","C","PO","PE","P","M"};
+int nNNNVAL=8;
+STR NNNVAL[]={"0","1","2","3","4","5","6","7"};
+
+int nREGVAL=7;
+STR REGVAL[]={"A","B","C","D","E","H","L"};
+int nMEMVAL=1;
+STR MEMVAL[]={"M"};
+int nRPXVAL=4;
+STR RPXVAL[]={"B","D","H","SP"};
+int nRP1VAL=2;
+STR RP1VAL[]={"B","D"};
+int nRP2VAL=3;
+STR RP2VAL[]={"B","D","H"};
+int nPSWVAL=1;
+STR PSWVAL[]={"PSW"};
+
+INSTRUCTION iset[74];
+
+void setinstructions()
+{
+	iset[0]. setv(DTR,"MOV", REG,REG,"01DDDSSS",MOVREGREG);
+	iset[1]. setv(DTR,"MOV", REG,MEM,"01DDD110",MOVREGMEM);
+	iset[2]. setv(DTR,"MOV", MEM,REG,"01110SSS",MOVMEMREG);
+	iset[3]. setv(DTR,"MVI", REG,D08,"00DDD110",MVIREGD08);
+	iset[4]. setv(DTR,"MVI", MEM,D08,"00110110",MVIMEMD08);
+	iset[5]. setv(DTR,"LDA", D16,SPC,"00111010",LDA);
+	iset[6]. setv(DTR,"LDAX",RP1,SPC,"00RP1010",LDAX);
+	iset[7]. setv(DTR,"LXI", RPX,D16,"00RP0001",LXI);
+	iset[8]. setv(DTR,"LHLD",D16,SPC,"00101010",LHLD);
+	iset[9]. setv(DTR,"STA", D16,SPC,"00110010",STA);
+	iset[10].setv(DTR,"STAX",RP1,SPC,"00RP0010",STAX);
+	iset[11].setv(DTR,"SHLD",D16,SPC,"00100010",SHLD);
+	iset[12].setv(DTR,"SPHL",SPC,SPC,"11111001",SPHL);
+	iset[13].setv(DTR,"XCHG",SPC,SPC,"11101011",XCHG);
+	iset[14].setv(DTR,"XTHL",SPC,SPC,"11100011",XTHL);
+	iset[15].setv(DTR,"PUSH",RP2,SPC,"11RP0101",PUSHREG);
+	iset[16].setv(DTR,"PUSH",PSW,SPC,"11110101",PUSHPSW);
+	iset[17].setv(DTR,"POP", RP2,SPC,"11RP0001",POPREG);
+	iset[18].setv(DTR,"POP", PSW,SPC,"11110001",POPPSW);
+	iset[19].setv(DTR,"IN",  D08,SPC,"11011011",IN);
+	iset[20].setv(DTR,"OUT", D08,SPC,"11010011",OUT);
+	iset[21].setv(ART,"ADD", REG,SPC,"10000SSS",ADDREG);
+	iset[22].setv(ART,"ADD", MEM,SPC,"10000110",ADDMEM);
+	iset[23].setv(ART,"ADI", D08,SPC,"11000110",ADI);
+	iset[24].setv(ART,"ADC", REG,SPC,"10001SSS",ADCREG);
+	iset[25].setv(ART,"ADC", MEM,SPC,"10001110",ADCMEM);
+	iset[26].setv(ART,"ACI", D08,SPC,"11001110",ACI);
+	iset[27].setv(ART,"DAA", SPC,SPC,"00100111",DAA);
+	iset[28].setv(ART,"DAD", RPX,SPC,"00RP1001",DAD);
+	iset[29].setv(ART,"SUB", REG,SPC,"10010SSS",SUBREG);
+	iset[30].setv(ART,"SUB", MEM,SPC,"10010110",SUBMEM);
+	iset[31].setv(ART,"SUI", D08,SPC,"11010110",SUI);
+	iset[32].setv(ART,"SBB", REG,SPC,"10011SSS",SBBREG);
+	iset[33].setv(ART,"SBB", MEM,SPC,"10011110",SBBMEM);
+	iset[34].setv(ART,"SBI", D08,SPC,"11011110",SBI);
+	iset[35].setv(ART,"INR", REG,SPC,"00SSS100",INRREG);
+	iset[36].setv(ART,"INR", MEM,SPC,"00110100",INRMEM);
+	iset[37].setv(ART,"INX", RPX,SPC,"00RP0011",INX);
+	iset[38].setv(ART,"DCR", REG,SPC,"00SSS101",DCRREG);
+	iset[39].setv(ART,"DCR", MEM,SPC,"00110101",DCRMEM);
+	iset[40].setv(ART,"DCX", RPX,SPC,"00RP1011",DCX);
+	iset[41].setv(LOG,"ANA", REG,SPC,"10100SSS",ANAREG);
+	iset[42].setv(LOG,"ANA", MEM,SPC,"10100110",ANAMEM);
+	iset[43].setv(LOG,"ANI", D08,SPC,"11100110",ANI);
+	iset[44].setv(LOG,"ORA", REG,SPC,"10110SSS",ORAREG);
+	iset[45].setv(LOG,"ORA", MEM,SPC,"10110110",ORAMEM);
+	iset[46].setv(LOG,"ORI", D08,SPC,"11110110",ORI);
+	iset[47].setv(LOG,"XRA", REG,SPC,"10101SSS",XRAREG);
+	iset[48].setv(LOG,"XRA", MEM,SPC,"10101110",XRAMEM);
+	iset[49].setv(LOG,"XRI", D08,SPC,"11101110",XRI);
+	iset[50].setv(LOG,"CMP", REG,SPC,"10111SSS",CMPREG);
+	iset[51].setv(LOG,"CMP", MEM,SPC,"10111110",CMPMEM);
+	iset[52].setv(LOG,"CPI", D08,SPC,"11111110",CPI);
+	iset[53].setv(LOG,"CMA", SPC,SPC,"00101111",CMA);
+	iset[54].setv(LOG,"CMC", SPC,SPC,"00111111",CMC);
+	iset[55].setv(LOG,"STC", SPC,SPC,"00110111",STC);
+	iset[56].setv(LOG,"RLC", SPC,SPC,"00000111",RLC);
+	iset[57].setv(LOG,"RAL", SPC,SPC,"00010111",RAL);
+	iset[58].setv(LOG,"RRC", SPC,SPC,"00001111",RRC);
+	iset[59].setv(LOG,"RAR", SPC,SPC,"00011111",RAR);
+	iset[60].setv(BRN,"JMP", D16,SPC,"11000011",JMP);
+	iset[61].setv(BRN,"JXX", D16,SPC,"11CCC010",JXX);
+	iset[62].setv(BRN,"CALL",D16,SPC,"11001101",CALL);
+	iset[63].setv(BRN,"CXX", D16,SPC,"11CCC100",CXX);
+	iset[64].setv(BRN,"RET", SPC,SPC,"11001001",RET);
+	iset[65].setv(BRN,"RXX", SPC,SPC,"11CCC000",RXX);
+	iset[66].setv(BRN,"RST", NNN,SPC,"11NNN111",RST);
+	iset[67].setv(BRN,"PCHL",SPC,SPC,"11101001",PCHL);
+	iset[68].setv(MCL,"SIM", SPC,SPC,"00110000",SIM);
+	iset[69].setv(MCL,"RIM", SPC,SPC,"00100000",RIM);
+	iset[70].setv(MCL,"DI",  SPC,SPC,"11110011",DI);
+	iset[71].setv(MCL,"EI",  SPC,SPC,"11111011",EI);
+	iset[72].setv(MCL,"HLT", SPC,SPC,"01110110",HLT);
+	iset[73].setv(MCL,"NOP", SPC,SPC,"00000000",NOP);
+}
+
+class GWINDOW
+{
+	private:
+		int left,top;
+		int width,height;
+		STR caption;
+	public:
+		GWINDOW();
+		GWINDOW(int,int,int,int,STR);
+		void drawwindow();
+		void drawcaption();
+		int  getleft();
+		int  gettop();
+		int  getwidth();
+		int  getheight();
+		STR  getcaption();
+};
+
+GWINDOW::GWINDOW()
+{
+	left=0;
+	top=0;
+	width=0;
+	height=0;
+	caption="";
+}
+GWINDOW::GWINDOW(int l,int t,int w,int h,STR tc)
+{
+	left=l;
+	top=t;
+	width=w-1;
+	height=h-1;
+	caption=tc;
+	drawwindow();
+	drawcaption();
+}
+void GWINDOW::drawwindow()
+{
+	gmouse.hidepointer();
+	setcolor(7);
+	for(int i=0;i<height;i++) line(left,top+i,left+width,top+i);
+	setcolor(15);
+	line(left,top,left+width,top);
+	line(left,top,left,top+height);
+	line(left+1,top+1,left+width-1,top+1);
+	line(left+1,top+1,left+1,top+height-1);
+	setcolor(8);
+	line(left+width,top+1,left+width,top+height);
+	line(left+1,top+height,left+width,top+height);
+	line(left+width-1,top+2,left+width-1,top+height-1);
+	line(left+2,top+height-1,left+width-1,top+height-1);
+	gmouse.showpointer();
+}
+void GWINDOW::drawcaption()
+{
+	setcolor(1);
+	for(int i=0;i<20;i++) line(left+2,top+2+i,left+width-2,top+2+i);
+	setcolor(15);
+	settextstyle(2,0,5);
+	outtextxy(left+6,top+4,caption.getstr());
+}
+int GWINDOW::getleft()
+{
+	return(left);
+}
+int GWINDOW::gettop()
+{
+	return(top);
+}
+int GWINDOW::getwidth()
+{
+	return(width);
+}
+int GWINDOW::getheight()
+{
+	return(height);
+}
+STR GWINDOW::getcaption()
+{
+	return(caption);
+}
+
+class GBUTTON
+{
+	private:
+		int left,top;
+		int width,height;
+		STR caption;
+		int ENABLED;
+		int BUTTONDOWN;
+		int MOUSEOVER;
+		int SELECTED;
+	public:
+		void (*btfunction)();
+		GBUTTON();
+		GBUTTON(int,int,int,int,STR,void (*)());
+		void drawbutton();
+		void drawcaption();
+		int  getenabled();
+		void btenable();
+		void btdisable();
+		void buttondown();
+		void buttonup();
+		void mouseover();
+		void notmouseover();
+		void selectbutton();
+		void unselectbutton();
+		int  getleft();
+		int  gettop();
+		int  getwidth();
+		int  getheight();
+		STR  getcaption();
+};
+
+STACK<GBUTTON*> gbstack;
+
+GBUTTON::GBUTTON()
+{
+	left=0;
+	top=0;
+	width=0;
+	height=0;
+	caption="";
+	ENABLED=TRUE;
+	BUTTONDOWN=FALSE;
+	MOUSEOVER=FALSE;
+	SELECTED=FALSE;
+}
+GBUTTON::GBUTTON(int l,int t,int w,int h,STR ct,void (*fnptr)())
+{
+	left=l;
+	top=t;
+	width=w-1;
+	height=h-1;
+	caption=ct;
+	ENABLED=TRUE;
+	BUTTONDOWN=FALSE;
+	SELECTED=FALSE;
+	drawbutton();
+	MOUSEOVER=FALSE;
+	drawcaption();
+	gbstack.pushnode(this);
+	btfunction=fnptr;
+}
+void GBUTTON::drawbutton()
+{
+	gmouse.hidepointer();
+	setcolor(7);
+	for(int i=0;i<height;i++) line(left,top+i,left+width,top+i);
+	if(BUTTONDOWN==FALSE) setcolor(15);
+	else if(BUTTONDOWN==TRUE) setcolor(8);
+	line(left,top,left+width,top);
+	line(left,top,left,top+height);
+	line(left+1,top+1,left+width-1,top+1);
+	line(left+1,top+1,left+1,top+height-1);
+	if(BUTTONDOWN==FALSE) setcolor(8);
+	else if(BUTTONDOWN==TRUE) setcolor(15);
+	line(left+width,top+1,left+width,top+height);
+	line(left+1,top+height,left+width,top+height);
+	line(left+width-1,top+2,left+width-1,top+height-1);
+	line(left+2,top+height-1,left+width-1,top+height-1);
+	gmouse.showpointer();
+}
+void GBUTTON::drawcaption()
+{
+	int tw,th;
+	settextstyle(0,0,1);
+	tw=textwidth(caption.getstr());
+	th=textheight(caption.getstr());
+	int tl=left+(width-tw)/2;
+	int tt=top+(height-th)/2;
+	if(MOUSEOVER==FALSE) setcolor(1);
+	else if(MOUSEOVER==TRUE) setcolor(4);
+	if(ENABLED==FALSE) setcolor(8);
+	gmouse.hidepointer();
+	if(BUTTONDOWN==FALSE)
+	{
+		outtextxy(tl,tt,caption.getstr());
+		if(SELECTED==TRUE)
+		{
+			setcolor(8);
+			setlinestyle(DOTTED_LINE,1,1);
+			rectangle(tl-4,tt-3,tl+tw+1,tt+th+2);
+			setlinestyle(0,1,1);
+		}
+		else if(SELECTED==FALSE)
+		{
+			setcolor(7);
+			rectangle(tl-4,tt-3,tl+tw+1,tt+th+2);
+		}
+	}
+	else if(BUTTONDOWN==TRUE)
+	{
+		outtextxy(tl+1,tt+1,caption.getstr());
+		if(SELECTED==TRUE)
+		{
+			setcolor(8);
+			setlinestyle(DOTTED_LINE,1,1);
+			rectangle(tl-3,tt-2,tl+tw+2,tt+th+3);
+			setlinestyle(0,1,1);
+		}
+		else if(SELECTED==FALSE)
+		{
+			setcolor(7);
+			rectangle(tl-3,tt-2,tl+tw+2,tt+th+3);
+		}
+	}
+	gmouse.showpointer();
+}
+int GBUTTON::getenabled()
+{
+	return(ENABLED);
+}
+void GBUTTON::btenable()
+{
+	ENABLED=TRUE;
+	drawbutton();
+	drawcaption();
+}
+void GBUTTON::btdisable()
+{
+	ENABLED=FALSE;
+	drawbutton();
+	drawcaption();
+}
+void GBUTTON::buttondown()
+{
+	BUTTONDOWN=TRUE;
+	drawbutton();
+	MOUSEOVER=TRUE;
+	drawcaption();
+}
+void GBUTTON::buttonup()
+{
+	BUTTONDOWN=FALSE;
+	drawbutton();
+	MOUSEOVER=FALSE;
+	drawcaption();
+}
+void GBUTTON::mouseover()
+{
+	MOUSEOVER=TRUE;
+	drawcaption();
+}
+void GBUTTON::notmouseover()
+{
+	MOUSEOVER=FALSE;
+	drawcaption();
+}
+void GBUTTON::selectbutton()
+{
+	SELECTED=TRUE;
+	drawcaption();
+}
+void GBUTTON::unselectbutton()
+{
+	SELECTED=FALSE;
+	drawcaption();
+}
+int GBUTTON::getleft()
+{
+	return(left);
+}
+int GBUTTON::gettop()
+{
+	return(top);
+}
+int GBUTTON::getwidth()
+{
+	return(width);
+}
+int GBUTTON::getheight()
+{
+	return(height);
+}
+STR GBUTTON::getcaption()
+{
+	return(caption);
+}
+
+int gmousewithinrect(int left,int top,int width,int height,int *mbvptr)
+{
+	int mbstat,mcurrx,mcurry,i;
+	gmouse.getpointer(&mbstat,&mcurrx,&mcurry); *mbvptr=mbstat;
+	if(between(mcurrx,left,left+width)&&between(mcurry,top,top+height))
+		return(TRUE);
+	else return(FALSE);
+}
+
+void readgbuttons()
+{
+	if(gbstack.ntop()<=0) return;
+	int i,j,tl,tt,tw,th,mb,key=0,ncbt,maxbutts=gbstack.ntop();
+	GBUTTON *currbt;
+	ncbt=1;
+	while(key!=1)
+	{
+		for(i=1;i<=maxbutts;i++)
+			gbstack.getnode(i)->unselectbutton();
+		gbstack.getnode(ncbt)->selectbutton();
+		while(!kbhit())
+		{
+			for(i=1;i<=maxbutts;i++)
+			{
+				currbt=gbstack.getnode(i);
+				tl=currbt->getleft();
+				tt=currbt->gettop();
+				tw=currbt->getwidth();
+				th=currbt->getheight();
+				if(currbt->getenabled()==TRUE)
+				{
+					if(gmousewithinrect(tl,tt,tw,th,&mb))
+					{
+						if(mb!=LEFTMOUSE)
+						{
+							currbt->buttonup();
+							currbt->mouseover();
+							while(gmousewithinrect(tl,tt,tw,th,&mb))
+							{
+								if(mb==LEFTMOUSE)
+								{
+									ncbt=i;
+									for(j=1;j<=maxbutts;j++)
+										gbstack.getnode(j)->unselectbutton();
+									gbstack.getnode(ncbt)->selectbutton();
+									currbt->buttondown();
+									while(gmousewithinrect(tl,tt,tw,th,&mb))
+									{
+										if(mb!=LEFTMOUSE)
+										{
+											currbt->btfunction();
+											break;
+										}
+									}
+									currbt->buttonup();
+									currbt->mouseover();
+								}
+							}
+							currbt->notmouseover();
+						}
+					}
+				}
+			}
+		}
+		ii.h.ah=0;
+		int86(22,&ii,&ii);
+		key=ii.h.ah;
+		if(key==ENTERKEY||key==SPACEBARKEY)
+		{
+			gbstack.getnode(ncbt)->buttondown();
+			delay(100);
+			gbstack.getnode(ncbt)->buttonup();
+			gbstack.getnode(ncbt)->btfunction();
+		}
+		if(key==UPARROWKEY) ncbt--;
+		if(key==DNARROWKEY) ncbt++;
+		if(ncbt<1) ncbt=maxbutts;
+		if(ncbt>maxbutts) ncbt=1;
+	}
+}
+
+void draw8085architecture()
+{
+	initialize_graphics();
+	setbkcolor(0);
+	setcolor(15);
+	rectangle(20,30,MAXX-20,380);
+	line(0,50,20,50);
+	line(0,70,20,70);
+	settextstyle(2,0,4);
+	outtextxy(1,35,"V");
+	outtextxy(7,38,"cc");
+	outtextxy(1,75,"GND");
+	rectangle(100,30,260,60);
+	settextstyle(2,0,5);
+	outtextxy(118,36,"Interrupt Control");
+	drawvarrow(120,5,25,DNARROWPTR);
+	drawvarrow(145,5,25,DNARROWPTR);
+	drawvarrow(170,5,25,DNARROWPTR);
+	drawvarrow(195,5,25,DNARROWPTR);
+	drawvarrow(220,5,25,DNARROWPTR);
+	drawvarrow(245,5,25,DNARROWPTR);
+	settextstyle(2,1,4);
+	outtextxy(105,3,"INTR");
+	outtextxy(130,3,"INTA");
+	line(129,5,129,27);
+	settextstyle(2,1,3);
+	outtextxy(155,-2,"RST 5.5");
+	outtextxy(180,-2,"RST 6.5");
+	outtextxy(205,-2,"RST 7.5");
+	settextstyle(2,1,4);
+	outtextxy(230,3,"TRAP");
+	rectangle(410,30,570,60);
+	settextstyle(2,0,5);
+	outtextxy(425,36,"Serial I/O Control");
+	drawvarrow(450,5,25,DNARROWPTR);
+	drawvarrow(530,5,25,UPARROWPTR);
+	settextstyle(2,1,4);
+	outtextxy(435,3,"SID");
+	outtextxy(515,3,"SOD");
+	line(40,97,MAXX-40,97);
+	line(40,100,MAXX-40,100);
+	settextstyle(2,0,4);
+	outtextxy(280,84,"Internal Data Bus");
+	debarvarrow(175,61,10,35);
+	debarvarrow(490,61,10,35);
+	debarvarrow(120,101,10,35);
+	debarvarrow(230,101,10,35);
+	rectangle(80,136,170,176);
+	settextstyle(2,0,5);
+	outtextxy(85,140,"Accumulator");
+	settextstyle(0,0,2);
+	outtextxy(85,158,"A");
+	rectangle(190,136,280,176);
+	settextstyle(2,0,5);
+	outtextxy(200,140,"Temporary");
+	settextstyle(0,0,2);
+	outtextxy(200,158,"T");
+	debarvarrow(135,177,10,35);
+	debarvarrow(215,177,10,35);
+	line(120,212,120,252); // ALU
+	line(240,212,240,252);
+	line(120,252,240,252);
+	line(120,212,165,212);
+	line(240,212,195,212);
+	line(165,212,180,225);
+	line(195,212,180,225);
+	settextstyle(0,0,1);
+	outtextxy(169,235,"ALU");
+	line(200,252,200,287);   // ALU to flag
+	line(204,252,204,283);
+	line(200,287,230,287);
+	line(204,283,230,283);
+	drawbarharrow(230,280,10,10,RTARROWPTR);
+	rectangle(240,270,255,300);
+	rectangle(255,270,270,300);
+	rectangle(270,270,285,300);
+	rectangle(285,270,300,300);
+	rectangle(300,270,315,300);
+	rectangle(315,270,330,300);
+	rectangle(330,270,345,300);
+	rectangle(345,270,360,300);
+	settextstyle(0,0,1);
+	outtextxy(245,273,"S");
+	outtextxy(260,273,"Z");
+	outtextxy(290,273,"A");
+	outtextxy(320,273,"P");
+	outtextxy(350,273,"C");
+	settextstyle(2,0,4);
+	outtextxy(265,302,"Flag Register");
+	debarvarrow(295,101,10,169);
+	drawbarvarrow(55,101,10,10,UPARROWPTR);
+	line(58,111,58,287);
+	line(58,287,160,287);
+	line(160,287,160,252);
+	line(62,111,62,282);
+	line(62,283,156,283);
+	line(156,283,156,252);
+	debarvarrow(490,101,10,34);
+	rectangle(430,135,560,160);
+	rectangle(430,160,560,185);
+	rectangle(430,185,560,210);
+	rectangle(430,210,560,235);
+	rectangle(430,235,560,260);
+	rectangle(430,260,560,285);
+	rectangle(430,285,560,310);
+	line(495,135,495,235);
+	settextstyle(0,0,2);
+	outtextxy(435,141,"W");
+	outtextxy(500,141,"Z");
+	outtextxy(435,166,"B");
+	outtextxy(500,166,"C");
+	outtextxy(435,191,"D");
+	outtextxy(500,191,"E");
+	outtextxy(435,216,"H");
+	outtextxy(500,216,"L");
+	outtextxy(435,241,"SP");
+	outtextxy(435,266,"PC");
+	settextstyle(2,0,4);
+	outtextxy(435,292,"Incrementr/Decrementr");
+	rectangle(430,350,510,380);
+	settextstyle(2,0,4);
+	outtextxy(435,352,"High Address");
+	outtextxy(455,365,"Buffer");
+	rectangle(520,350,600,380);
+	settextstyle(2,0,4);
+	outtextxy(525,352,"Address/Data");
+	outtextxy(545,365,"Buffer");
+	debarvarrow(575,101,10,249);
+	line(480,310,480,340);
+	drawbarvarrow(477,340,10,10,DNARROWPTR);
+	line(484,310,484,323);
+	line(484,327,484,340);
+	line(484,323,540,323);
+	line(484,327,536,327);
+	line(536,327,536,340);
+	line(540,323,540,340);
+	drawbarvarrow(533,340,10,10,DNARROWPTR);
+	settextstyle(2,0,4);
+	outtextxy(488,328,"8");
+	outtextxy(544,328,"8");
+	line(470,380,470,410);
+	line(474,380,474,410);
+	settextstyle(2,0,4);
+	outtextxy(440,425,"Address Bus");
+	outtextxy(445,437,"(A  - A  )");
+	outtextxy(445,440,"  8    15 ");
+	drawbarvarrow(467,410,10,10,DNARROWPTR);
+	debarvarrow(555,381,10,40);
+	outtextxy(520,425,"Address/Data Bus");
+	outtextxy(535,437,"(AD  - AD )");
+	outtextxy(535,440,"   0     7 ");
+	rectangle(50,360,395,380);
+	settextstyle(2,0,4);
+	outtextxy(130,364,"Timing and Control Circuitry");
+	drawvarrow(60,380,30,UPARROWPTR);
+	drawvarrow(85,380,30,UPARROWPTR);
+	drawvarrow(110,380,30,DNARROWPTR);
+	drawvarrow(135,380,30,UPARROWPTR);
+	drawvarrow(160,380,30,DNARROWPTR);
+	drawvarrow(185,380,30,UPARROWPTR);
+	drawvarrow(210,380,30,UPARROWPTR);
+	drawvarrow(235,380,30,DNARROWPTR);
+	drawvarrow(260,380,30,DNARROWPTR);
+	drawvarrow(285,380,30,DNARROWPTR);
+	drawvarrow(310,380,30,DNARROWPTR);
+	drawvarrow(335,380,30,UPARROWPTR);
+	drawvarrow(360,380,30,DNARROWPTR);
+	drawvarrow(385,380,30,DNARROWPTR);
+	settextstyle(2,1,4);
+	outtextxy(45,383,"X1");
+	outtextxy(70,383,"X2");
+	outtextxy(95,383,"CLK");
+	outtextxy(120,383,"HOLD");
+	outtextxy(145,383,"HLDA");
+	outtextxy(170,383,"READY");
+	outtextxy(195,383,"IO/M");
+	line(194,385,194,390);
+	outtextxy(220,383,"RD");
+	line(219,385,219,395);
+	outtextxy(245,383,"WR");
+	line(244,385,244,395);
+	outtextxy(270,383,"ALE");
+	outtextxy(295,383,"RTOUT");
+	outtextxy(320,383,"RTIN");
+	line(319,385,319,405);
+	outtextxy(345,383,"S0");
+	outtextxy(370,383,"S1");
+	line(110,360,80,330);
+	line(80,330,83,330);
+	line(80,330,80,333);
+	line(110,360,140,330);
+	line(140,330,137,330);
+	line(140,330,140,333);
+	line(87,330,92,330);
+	line(97,330,102,330);
+	line(107,330,112,330);
+	line(117,330,122,330);
+	line(127,330,132,330);
+	rectangle(325,140,405,170);
+	settextstyle(2,0,4);
+	outtextxy(335,142,"Instruction");
+	outtextxy(344,155,"Register");
+	line(365,101,365,130);
+	line(369,101,369,130);
+	drawbarvarrow(362,130,10,10,DNARROWPTR);
+	rectangle(324,200,405,230);
+	settextstyle(2,0,4);
+	outtextxy(345,208,"Decoder");
+	line(365,170,365,190);
+	line(369,170,369,190);
+	drawbarvarrow(362,190,10,10,DNARROWPTR);
+	drawbarvarrow(217,350,10,10,DNARROWPTR);
+	line(220,350,220,330);
+	line(220,330,375,330);
+	line(224,350,224,334);
+	line(224,334,379,334);
+	line(375,330,375,230);
+	line(379,334,379,230);
+	gbstack.popallnodes();
+	GBUTTON gbt(340,MAXY-45,80,30,"Back",mainmenu);
+	gmouse.initialize();
+	gmouse.showpointer();
+	gmouse.setpointer(0,0);
+	readgbuttons();
+}
+
+class TWINDOW
+{
+	private:
+		int  left,top;
+		int  width,height;
+		STR  caption;
+	public:
+		TWINDOW();
+		TWINDOW(int,int,int,int,STR);
+		void drawwindow();
+		void drawcaption();
+		int  getleft();
+		int  gettop();
+		int  getwidth();
+		int  getheight();
+		STR  getcaption();
+};
+
+STACK<TWINDOW*> twstack;
+
+TWINDOW::TWINDOW()
+{
+	left=0;
+	top=0;
+	width=0;
+	height=0;
+	caption="";
+}
+TWINDOW::TWINDOW(int l,int t,int w,int h,STR tc)
+{
+	left=l;
+	top=t;
+	width=w-1;
+	height=h-1;
+	caption=tc;
+	drawwindow();
+	drawcaption();
+	twstack.pushnode(this);
+}
+void TWINDOW::drawwindow(void)
+{
+	int i;
+	tmouse.hidepointer();
+	tbar(left,top,left+width,top+height,7,0);
+	tbox(left,top,left+width,top+height,DOUBLE_BORDER,7,15);
+	xyprint(left+2,top+height+1,readscrnstr(left+2,top+height+1,width),0,8);
+	for(i=top+1;i<=top+height+1;i++) xyprint(left+width+1,i,readscrnstr(left+width+1,i,2),0,8);
+	tmouse.showpointer();
+}
+void TWINDOW::drawcaption(void)
+{
+	tmouse.hidepointer();
+	STR spc(1);
+	xyprint((left+(width-len(caption.getstr()))/2-1)+1,top,spc+caption.getstr()+spc,7,1);
+	tmouse.showpointer();
+}
+int TWINDOW::getleft(void)
+{
+	return(left);
+}
+int TWINDOW::gettop(void)
+{
+	return(top);
+}
+int TWINDOW::getwidth(void)
+{
+	return(width);
+}
+int TWINDOW::getheight(void)
+{
+	return(height);
+}
+STR TWINDOW::getcaption(void)
+{
+	return(caption);
+}
+
+class TBUTTON
+{
+	private:
+		int left,top;
+		int width,height;
+		STR caption;
+		int ENABLED;
+		int BUTTONDOWN;
+		int MOUSEOVER;
+	public:
+		void (*btfunction)();
+		TBUTTON();
+		TBUTTON(int,int,int,int,STR,void (*)());
+		void drawbutton();
+		void drawcaption();
+		int  getenabled();
+		void btenable();
+		void btdisable();
+		void buttondown();
+		void buttonup();
+		void mouseover();
+		void notmouseover();
+		int  getleft();
+		int  gettop();
+		int  getwidth();
+		int  getheight();
+		STR  getcaption();
+};
+
+STACK<TBUTTON*> tbtstack;
+
+TBUTTON::TBUTTON()
+{
+	left=0;
+	top=0;
+	width=0;
+	height=0;
+	caption="";
+	ENABLED=TRUE;
+	BUTTONDOWN=FALSE;
+	MOUSEOVER=FALSE;
+}
+TBUTTON::TBUTTON(int l,int t,int w,int h,STR ct,void (*fnptr)())
+{
+	left=l;
+	top=t;
+	width=w-1;
+	height=h-1;
+	caption=ct;
+	ENABLED=TRUE;
+	BUTTONDOWN=FALSE;
+	drawbutton();
+	MOUSEOVER=FALSE;
+	drawcaption();
+	tbtstack.pushnode(this);
+	btfunction=fnptr;
+}
+void TBUTTON::drawbutton()
+{
+	int i;
+	tmouse.hidepointer();
+	if(BUTTONDOWN==FALSE)
+	{
+		tbar(left,top,left+width,top+height,2,7);
+		tbar(left+width+1,top,left+width+1,top+height,7,7);
+		xyprint(left+1,top+height+1,replicate(chr(223),width),7,0);
+		xyprint(left+width,top,chr(220),7,0);
+		for(i=top+1;i<=top+height;i++)
+			xyprint(left+width,i,chr(219),7,0);
+	}
+	else if(BUTTONDOWN==TRUE)
+	{
+		tbar(left+1,top,left+1+width,top+height,2,7);
+		tbar(left,top,left,top+height,7,7);
+		xyprint(left+1,top+height+1,replicate(chr(223),width+1),7,7);
+		for(int i=top;i<=top+height;i++)
+			xyprint(left+width+1,i,chr(220),7,7);
+	}
+	gmouse.showpointer();
+}
+void TBUTTON::drawcaption()
+{
+	tmouse.hidepointer();
+	if(MOUSEOVER==FALSE) text_color(2,0);
+	else if(MOUSEOVER==TRUE) text_color(2,15);
+	if(ENABLED==FALSE) text_color(2,8);
+	if(BUTTONDOWN==FALSE) printSTR(left,top+(height)/2,padc(caption.getstr(),width));
+	else if(BUTTONDOWN==TRUE) printSTR(left+1,top+(height)/2,padc(caption.getstr(),width));
+	tmouse.showpointer();
+}
+int TBUTTON::getenabled()
+{
+	return(ENABLED);
+}
+void TBUTTON::btenable()
+{
+	ENABLED=TRUE;
+	drawbutton();
+	drawcaption();
+}
+void TBUTTON::btdisable()
+{
+	ENABLED=FALSE;
+	drawbutton();
+	drawcaption();
+}
+void TBUTTON::buttondown()
+{
+	BUTTONDOWN=TRUE;
+	drawbutton();
+	MOUSEOVER=TRUE;
+	drawcaption();
+}
+void TBUTTON::buttonup()
+{
+	BUTTONDOWN=FALSE;
+	drawbutton();
+	MOUSEOVER=FALSE;
+	drawcaption();
+}
+void TBUTTON::mouseover()
+{
+	MOUSEOVER=TRUE;
+	drawcaption();
+}
+void TBUTTON::notmouseover()
+{
+	MOUSEOVER=FALSE;
+	drawcaption();
+}
+int TBUTTON::getleft()
+{
+	return(left);
+}
+int TBUTTON::gettop()
+{
+	return(top);
+}
+int TBUTTON::getwidth()
+{
+	return(width);
+}
+int TBUTTON::getheight()
+{
+	return(height);
+}
+STR TBUTTON::getcaption()
+{
+	return(caption);
+}
+
+int tmousewithinrect(int left,int top,int width,int height,int *mbvptr)
+{
+	int mbstat,mcurrx,mcurry,i;
+	tmouse.getpointer(&mbstat,&mcurrx,&mcurry); *mbvptr=mbstat;
+	left=(left-1)*TCHARWIDTH;
+	width=(width-1)*TCHARWIDTH;
+	top=(top-1)*TCHARHEIGHT;
+	height=height*TCHARHEIGHT;
+	if(between(mcurrx,left,left+width)&&between(mcurry,top,top+height))
+		return(TRUE);
+	else return(FALSE);
+}
+
+void readtbuttons(int last)
+{
+	int nbutts=tbtstack.ntop();
+	if(!nbutts) return;
+	int i,tl,tt,tw,th,mb,btst=nbutts-last+1;
+	if(btst<1) btst=1;
+	TBUTTON *currbt;
+	while(!kbhit())
+	{
+		for(i=btst;i<=nbutts;i++)
+		{
+			currbt=tbtstack.getnode(i);
+			tl=currbt->getleft();
+			tt=currbt->gettop();
+			tw=currbt->getwidth();
+			th=currbt->getheight();
+			if(currbt->getenabled()==TRUE)
+			if(tmousewithinrect(tl,tt,tw,th,&mb))
+			{
+				if(mb!=LEFTMOUSE)
+				{
+					currbt->mouseover();
+					while(tmousewithinrect(tl,tt,tw,th,&mb))
+					{
+						if(mb==LEFTMOUSE)
+						{
+							currbt->buttondown();
+							while(tmousewithinrect(tl,tt,tw,th,&mb))
+							{
+								if(mb!=LEFTMOUSE)
+								{
+									currbt->btfunction();
+									break;
+								}
+							}
+							currbt->buttonup();
+							currbt->mouseover();
+						}
+					}
+					currbt->notmouseover();
+				}
+			}
+		}
+	}
+}
+
+void readtbuttons()
+{
+	readtbuttons(tbtstack.ntop());
+}
+
+STR readtext(STR text,int tcol,int trow,int *ptrretv)
+{
+	text=editSTR(text,UPPERANDNUM,tcol,trow,3,15,ptrretv);
+	return(text);
+}
+STR readtext(STR text,int tcol,int trow,int tstyle,int *ptrretv)
+{
+	text=editSTR(text,tstyle,tcol,trow,3,15,ptrretv);
+	return(text);
+}
+
+SLINKED<STR> prglabelarr;
+SLINKED<STR> prgopcodearr;
+SLINKED<STR> prgopr1arr;
+SLINKED<STR> prgopr2arr;
+
+int NEWPRG=0,OPENEDPRG=1;
+
+struct fPRGID
+{
+	unsigned long prgid;
+	char prgtit[50];
+};
+
+struct fPRGINSTR
+{
+	char flabel[5];
+	char fopcode[5];
+	char foperand1[5];
+	char foperand2[5];
+};
+
+void savenewfile(STR tptit)
+{
+	FILE *fpplst;
+	fpplst=fopen("prgs.lgn","rb+");
+	if(fpplst==NULL)
+	{
+		fpplst=fopen("prgs.lgn","wb+");
+		if(fpplst==NULL)
+		{
+			msgbox("File Save Error","Error");
+			return;
+		}
+	}
+	unsigned long tpid;
+	fPRGID tfpidst;
+	tfpidst.prgid=0;
+	tpid=0;
+	while(fread(&tfpidst,sizeof(tfpidst),1,fpplst))
+		if(tpid<tfpidst.prgid) tpid=tfpidst.prgid;
+	tpid=tpid+1;
+	fseek(fpplst,0,2);
+	tfpidst.prgid=tpid;
+	strcpy(tfpidst.prgtit,tptit.getstr());
+	fwrite(&tfpidst,sizeof(tfpidst),1,fpplst);
+	fcloseall();
+	char *tsvfn;
+	sprintf(tsvfn,"%u.mpp",tpid);
+	FILE *fppnfn;
+	fppnfn=fopen(tsvfn,"wb+");
+	if(fppnfn==NULL)
+	{
+		msgbox("File save error","Error");
+		return;
+	}
+	int i,tncnt=prglabelarr.nitems();
+	fPRGINSTR tfpinstr;
+	for(i=1;i<=tncnt;i++)
+	{
+		strcpy(tfpinstr.flabel,prglabelarr.getnode(i).getstr());
+		strcpy(tfpinstr.fopcode,prgopcodearr.getnode(i).getstr());
+		strcpy(tfpinstr.foperand1,prgopr1arr.getnode(i).getstr());
+		strcpy(tfpinstr.foperand2,prgopr2arr.getnode(i).getstr());
+		fwrite(&tfpinstr,sizeof(tfpinstr),1,fppnfn);
+	}
+	fcloseall();
+}
+
+SLINKED<STR> tstrsprgs;
+unsigned long LSVFID;
+
+void openprogram()
+{
+	clearscreen();
+	tbar(1,1,80,25,1,7);
+	TWINDOW tw1(15,3,50,20,"List of saved Programs");
+	FILE *fplst;
+	fplst=fopen("prgs.lgn","rb+");
+	if(fplst==NULL)
+	{
+		msgbox("Cannot find saved programs","Open Error");
+		return;
+	}
+	unsigned long reccnt=0;
+	fPRGID tfpidst;
+	char *tmp;
+	SLINKED<unsigned long> tslpid;
+	if(tstrsprgs.nitems()>0) tstrsprgs.deleteallnodes();
+	while(fread(&tfpidst,sizeof(tfpidst),1,fplst))
+	{
+		STR tstr=alltrim(tfpidst.prgtit);
+		tstr=tstr+" ("+ltoa(tfpidst.prgid,tmp,10)+")";
+		tslpid.addnode(tfpidst.prgid);
+		tstrsprgs.addnode(tstr);
+		reccnt++;
+	}
+	fcloseall();
+	int ch;
+	ch=scrollmenu(tstrsprgs.nitems(),10,45,17,5);
+	if(ch<=0) return;
+	FILE *tfpopn;
+	char *tfn;
+	sprintf(tfn,"%ld.mpp",tslpid.getnode(ch));
+	LSVFID=tslpid.getnode(ch);
+	tfpopn=fopen(tfn,"rb+");
+	if(tfpopn==NULL)
+	{
+		msgbox("Cannot open Source file","Open Error");
+		return;
+	}
+	prglabelarr.deleteallnodes();
+	prgopcodearr.deleteallnodes();
+	prgopr1arr.deleteallnodes();
+	prgopr2arr.deleteallnodes();
+	fPRGINSTR tfpinstr;
+	while(fread(&tfpinstr,sizeof(tfpinstr),1,tfpopn))
+	{
+		prglabelarr.addnode(tfpinstr.flabel);
+		prgopcodearr.addnode(tfpinstr.fopcode);
+		prgopr1arr.addnode(tfpinstr.foperand1);
+		prgopr2arr.addnode(tfpinstr.foperand2);
+	}
+	fcloseall();
+	tstrsprgs.deleteallnodes();
+	tslpid.deleteallnodes();
+	clearscreen();
+	prgscreen();
+	browseprogram(OPENEDPRG);
+}
+
+void newprogram()
+{
+	clearscreen();
+	prgscreen();
+	prglabelarr.deleteallnodes();
+	prgopcodearr.deleteallnodes();
+	prgopr1arr.deleteallnodes();
+	prgopr2arr.deleteallnodes();
+	prglabelarr.addnode(STR(4));
+	prgopcodearr.addnode(STR(4));
+	prgopr1arr.addnode(STR(4));
+	prgopr2arr.addnode(STR(4));
+	browseprogram(NEWPRG);
+}
+
+int isvalidmnemonic(STR tmn)
+{
+	int i;
+	tmn=alltrim(tmn);
+	for(i=0;i<74;i++)
+		if(iset[i].getmnemonic()==tmn)
+			return(TRUE);
+	if(left(tmn,1)=="J"||left(tmn,1)=="C"||left(tmn,1)=="R")
+	{
+		STR tstr((tmn.getstr()+1));
+		for(i=0;i<nCCCVAL;i++)
+			if(tstr==CCCVAL[i])
+				return(TRUE);
+	}
+	return(FALSE);
+}
+
+int isvalidhex(STR thex)
+{
+	thex=alltrim(upper(thex));
+	int i,l=len(thex);
+	for(i=0;i<l;i++)
+		if(!(isdigit(thex.getchr(i))||
+		   between(thex.getchr(i),'A','F'))) return(FALSE);
+	return(TRUE);
+}
+
+int isvalid8bit(STR tstr)
+{
+	if(!isvalidhex(tstr)) return(FALSE);
+	for(int i=0;tstr.getchr(i)=='0';i++);
+	STR ts=(tstr.getstr()+i);
+	if(len(ts)>2) return(FALSE);
+	int bit8max=xtod("FF"),td=xtod(ts);
+	if(!between(td,0,bit8max)) return(FALSE);
+	return(TRUE);
+}
+
+int isvalid16bit(STR tstr)
+{
+	if(!isvalidhex(tstr)) return(FALSE);
+	for(int i=0;tstr.getchr(i)=='0';i++);
+	STR ts=(tstr.getstr()+i);
+	if(len(ts)>4) return(FALSE);
+	long bit16max=xtod("FFFF"),td=xtod(ts);
+	if(!between(td,0L,bit16max)) return(FALSE);
+	return(TRUE);
+}
+
+int isSPC(STR tstr)
+{
+	tstr=alltrim(tstr);
+	int flag=len(tstr)>0?FALSE:TRUE;
+	return(flag);
+}
+
+int isREG(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nREGVAL;i++) if(REGVAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int isRPX(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nRPXVAL;i++) if(RPXVAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int isRP1(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nRP1VAL;i++) if(RP1VAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int isRP2(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nRP2VAL;i++) if(RP2VAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int isMEM(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nMEMVAL;i++) if(MEMVAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int isD08(STR tstr)
+{
+	tstr=alltrim(tstr);
+	return(isvalid8bit(tstr));
+}
+
+int isD16(STR tstr)
+{
+	tstr=alltrim(tstr);
+	return(isvalid16bit(tstr));
+}
+
+int isPSW(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nPSWVAL;i++) if(PSWVAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int isNNN(STR tstr)
+{
+	tstr=alltrim(tstr);
+	for(int i=0;i<nNNNVAL;i++) if(NNNVAL[i]==tstr) return(TRUE);
+	return(FALSE);
+}
+
+int calcmnemonicgroup(STR tmn)
+{
+	int i,tg;
+	tmn=alltrim(tmn);
+	for(i=0;i<74;i++)
+		if(iset[i].getmnemonic()==tmn)
+			tg=iset[i].getgroup();
+	if(left(tmn,1)=="J"||left(tmn,1)=="C"||left(tmn,3)=="R")
+		tg=BRN;
+	return(tg);
+}
+
+// instructions execution
+BYTE REGS8[7];
+BYTE *regptr=REGS8;
+BYTE *A=&REGS8[0];
+BYTE *B=&REGS8[1];
+BYTE *C=&REGS8[2];
+BYTE *D=&REGS8[3];
+BYTE *E=&REGS8[4];
+BYTE *H=&REGS8[5];
+BYTE *L=&REGS8[6];
+WORD tgword;
+STACK<WORD> SP(tgword);
+
+BYTE CF=0,AF=0,ZF=0,SF=0,PF=0;
+
+BYTE lowbyte(WORD rpval)
+{
+	STR tstr=wordtox(rpval);
+	return(xtod(right(tstr,2)));
+}
+
+BYTE highbyte(WORD rpval)
+{
+	STR tstr=wordtox(rpval);
+	return(xtod(left(tstr,2)));
+}
+
+WORD rpxval(BYTE v1,BYTE v2)
+{
+	WORD rpval;
+	rpval=xtod(bytetox(v1)+bytetox(v2));
+	return(rpval);
+}
+
+WORD rpxval(BYTE *rp)
+{
+	return(rpxval(*(rp+1),*rp));
+}
+
+WORD getrpval(BYTE *rp)
+{
+	WORD rpval;
+	rpval=xtod(bytetox(*(rp+1))+bytetox(*rp));
+	return(rpval);
+}
+
+void setrpval(BYTE *rp,WORD rpval)
+{
+	*rp=lowbyte(rpval);
+	*(rp+1)=highbyte(rpval);
+}
+
+BYTE regpos(STR opr)
+{
+	BYTE i,rpos;
+	for(i=0;i<nREGVAL;i++)
+		if((opr==REGVAL[i]))
+		{
+			rpos=i;
+			break;
+		}
+	return(rpos);
+}
+
+class ADDRESS
+{
+	private:
+		BYTE *addr;
+	public:
+		ADDRESS();
+		~ADDRESS();
+		BYTE getval(WORD);
+		void setval(WORD,BYTE);
+		WORD getrpxval(WORD);
+		void setrpxval(WORD,WORD);
+};
+ADDRESS::ADDRESS()
+{
+	addr=new BYTE[6];
+}
+ADDRESS::~ADDRESS()
+{
+	delete addr;
+}
+BYTE ADDRESS::getval(WORD pos)
+{
+	return(*(addr+pos));
+}
+void ADDRESS::setval(WORD pos,BYTE val)
+{
+	*(addr+pos)=val;
+}
+WORD ADDRESS::getrpxval(WORD pos)
+{
+	return(getrpval(addr+pos));
+}
+void ADDRESS::setrpxval(WORD pos,WORD rpval)
+{
+	setrpval(addr+pos,rpval);
+}
+
+ADDRESS ADDR;
+
+void browseprogram(int prgtype)
+{
+	int i,j,flag,recst=1,recno=1,reccnt,field=1,maxrows=9;
+	int retv,rowst=9,currrow=rowst,tosave;
+	WORD saddrst=xtod("4150");
+	STR tb1;
+	setinstructions();
+	while(1)
+	{
+		reccnt=prglabelarr.nitems();
+		for(i=recst,j=0;i<=recst+maxrows;i++,j++)
+		{
+			if(i>reccnt)
+			{
+				for(;i<=recst+maxrows;i++,j++) xyprint(6,rowst+j,space(29),7,7);
+				break;
+			}
+			gotoxy(7,rowst+j);
+			text_color(7,8);
+			cprintf("%03d",i);
+			text_color(3,0);
+			printSTR(11,rowst+j,prglabelarr.getnode(i));
+			printSTR(17,rowst+j,prgopcodearr.getnode(i));
+			printSTR(23,rowst+j,prgopr1arr.getnode(i));
+			printSTR(29,rowst+j,prgopr2arr.getnode(i));
+		}
+		if(field==1)
+		{
+			tb1=prglabelarr.getnode(recno);
+			tb1=readtext(tb1,11,currrow,&retv);
+			prglabelarr.setnode(tb1,recno);
+		}
+		else if(field==2)
+		{
+			tb1=prgopcodearr.getnode(recno);
+			tb1=readtext(tb1,17,currrow,&retv);
+			prgopcodearr.setnode(tb1,recno);
+		}
+		else if(field==3)
+		{
+			tb1=prgopr1arr.getnode(recno);
+			tb1=readtext(tb1,23,currrow,&retv);
+			prgopr1arr.setnode(tb1,recno);
+		}
+		else if(field==4)
+		{
+			tb1=prgopr2arr.getnode(recno);
+			tb1=readtext(tb1,29,currrow,&retv);
+			prgopr2arr.setnode(tb1,recno);
+		}
+		if(retv==UPARROWKEY)
+		{
+			recno--;
+			if(recno<1) recno=1;
+			currrow--;
+			if(currrow<rowst)
+			{
+				currrow=rowst;
+				if(reccnt>maxrows)
+				{
+					recst--;
+					if(recst<1) recst=1;
+				}
+			}
+		}
+		if(retv==DNARROWKEY)
+		{
+			recno++;
+			if(recno>=reccnt) recno=reccnt;
+			currrow++;
+			if(reccnt<=maxrows&&currrow>=rowst+reccnt) currrow=rowst+reccnt-1;
+			if(reccnt>maxrows&&currrow>rowst+maxrows)
+			{
+				currrow=rowst+maxrows;
+				if(currrow>=rowst+maxrows)
+				{
+					recst++;
+					if(recst>=reccnt-maxrows) recst=reccnt-maxrows;
+				}
+			}
+		}
+		if(retv==PGUPKEY)
+		{
+			if(reccnt<=maxrows)
+			{
+				recno=1;
+				currrow=rowst;
+			}
+			else
+			{
+				if(currrow!=rowst)
+				{
+					recno-=currrow-rowst;
+					currrow=rowst;
+				}
+				else
+				{
+					recno-=maxrows;
+					if(recno<1) recno=1;
+					recst-=maxrows;
+					if(recst<1) recst=1;
+				}
+			}
+		}
+		if(retv==PGDNKEY)
+		{
+			if(reccnt<=maxrows)
+			{
+				recno=reccnt;
+				currrow=rowst+reccnt-1;
+			}
+			else
+			{
+				if(currrow!=rowst+maxrows)
+				{
+					recno+=(rowst+maxrows-currrow);
+					currrow=rowst+maxrows;
+				}
+				else
+				{
+					recno+=maxrows;
+					if(recno>reccnt) recno=reccnt;
+					recst+=maxrows;
+					if(recst>reccnt-maxrows) recst=reccnt-maxrows;
+				}
+			}
+		}
+		if(retv==CTRLHOMEKEY||retv==CTRLPGUPKEY)
+		{
+			recno=1;
+			recst=1;
+			currrow=rowst;
+		}
+		if(retv==CTRLENDKEY||retv==CTRLPGDNKEY)
+		{
+			recno=reccnt;
+			if(reccnt<=maxrows)
+			{
+				recst=1;
+				currrow=rowst+reccnt-1;
+			}
+			else
+			{
+				recst=reccnt-maxrows;
+				currrow=rowst+maxrows;
+			}
+		}
+		if(ASCIIC=='A'-64&&SCANC==30)
+		{
+			reccnt++;
+			if(reccnt<=maxrows) currrow=rowst+reccnt-1;
+			else
+			{
+				currrow=rowst+maxrows;
+				recst=reccnt-maxrows;
+			}
+			prglabelarr.addnode(STR(4));
+			prgopcodearr.addnode(STR(4));
+			prgopr1arr.addnode(STR(4));
+			prgopr2arr.addnode(STR(4));
+			recno=reccnt;
+		}
+		if(ASCIIC=='I'-64&&SCANC==23)
+		{
+			prglabelarr.insertnode(STR(4),recno);
+			prgopcodearr.insertnode(STR(4),recno);
+			prgopr1arr.insertnode(STR(4),recno);
+			prgopr2arr.insertnode(STR(4),recno);
+		}
+		if(ASCIIC=='D'-64&&SCANC==32)
+		{
+			if(reccnt!=1)
+			{
+				prglabelarr.deletenode(recno);
+				prgopcodearr.deletenode(recno);
+				prgopr1arr.deletenode(recno);
+				prgopr2arr.deletenode(recno);
+				reccnt=prglabelarr.nitems();
+				if(recno>reccnt) recno=reccnt;
+				if(reccnt<=maxrows)
+				{
+					recst=1;
+					currrow=rowst+recno-1;
+				}
+				else
+				{
+					recst=recno;
+					if(recst+maxrows>reccnt) recst=reccnt-maxrows;
+					currrow=rowst+(recno-recst);
+				}
+			}
+		}
+		if(ASCIIC=='R'-64&&SCANC==19)
+		{
+			int cont;
+			reccnt=prglabelarr.nitems();
+			STR tt1,tt2,tt3;
+			for(i=1;i<=reccnt;i++)
+			{
+				tt1=prgopcodearr.getnode(i);
+				tt2=prgopr1arr.getnode(i);
+				tt3=prgopr2arr.getnode(i);
+				cont=execute(tt1,tt2,tt3);
+				showregisters();
+				showaddresses(saddrst);
+				if(cont==FALSE) break;
+			}
+		}
+		if(ASCIIC=='T'-64&&SCANC==20)
+		{
+			int cont;
+			tbox(30,23,51,25,SINGLE_BORDER,1,15);
+			xyprint(32,24,"Tracing",1,7+BLINK);
+			xyprint(41,24,"Line:",1,7);
+			reccnt=prglabelarr.nitems();
+			STR tt1,tt2,tt3;
+			for(i=1;i<=reccnt;i++)
+			{
+				text_color(1,15);
+				gotoxy(47,24);
+				cprintf("%03d",i);
+				tt1=prgopcodearr.getnode(i);
+				tt2=prgopr1arr.getnode(i);
+				tt3=prgopr2arr.getnode(i);
+				cont=execute(tt1,tt2,tt3);
+				showregisters();
+				showaddresses(saddrst);
+				getch();
+				if(cont==FALSE) break;
+			}
+			tbar(1,23,79,25,1,1);
+		}
+		if(ASCIIC=='L'-64&&SCANC==38)
+		{
+			clearregisters();
+			showregisters();
+		}
+		if(ASCIIC=='Q'-64&&SCANC==16) showaddresses(saddrst=saddrst>11?saddrst-11:0);
+		if(ASCIIC=='Z'-64&&SCANC==44) showaddresses(saddrst=saddrst<65535-11?saddrst+11:65535-10);
+		if(ASCIIC=='E'-64&&SCANC==18)
+		{
+			tbox(25,23,54,25,SINGLE_BORDER,1,15);
+			xyprint(28,24,"Address:       Value:",1,7);
+			STR tb2(wordtox(saddrst));
+			tb1=tb2;
+			int flag;
+			do
+			{
+				tb1=readtext(tb1,37,24,&flag);
+			}while(flag!=ESCKEY&&flag!=ENTERKEY);
+			tb2=tb1;
+			if(flag==ENTERKEY)
+			{
+				STR tb3(bytetox(ADDR.getval(xtod(tb2))));
+				tb1=tb3;
+				do
+				{
+					tb1=readtext(tb1,50,24,&flag);
+				}while(flag!=ESCKEY&&flag!=ENTERKEY);
+				tb3=tb1;
+				if(flag==ENTERKEY)
+				{
+					ADDR.setval(xtod(tb2),xtod(tb3));
+					showaddresses(saddrst);
+				}
+			}
+			tbar(1,23,79,25,1,1);
+		}
+		if(ASCIIC==0&&retv==TABKEY) field--;
+		else if(retv==TABKEY||retv==ENTERKEY||retv==0) field++;
+		if(field<1) field=4;
+		if(field>4) field=1;
+		if(retv==ESCKEY)
+		{
+			tbox(25,23,56,25,DOUBLE_BORDER,1,15);
+			xyprint(28,24,"Save Program ?",1,14+BLINK);
+			int ch=0;
+			ch=getyesno(44,24,1,7);
+			if(ch==1)
+			{
+				tosave=TRUE;
+				break;
+			}
+			else if(ch==2)
+			{
+				tosave=FALSE;
+				break;
+			}
+			tbar(1,23,79,25,1,7);
+		}
+	}
+	if(tosave)
+	{
+		if(prgtype==NEWPRG)
+		{
+			tbar(1,23,79,25,1,7);
+			STR tprgtit(40);
+			tbox(15,23,65,25,DOUBLE_BORDER,1,7);
+			xyprint(17,24,"Title:",1,15);
+			int tflag=1;
+			while(tflag)
+			{
+				tprgtit=readtext(tprgtit,24,24,CHARANDNUM,&tflag);
+				if(tflag==ENTERKEY) tflag=0;
+				if(len(alltrim(tprgtit))<=0)
+					tflag=1;
+			}
+			savenewfile(tprgtit);
+		}
+		else if(prgtype==OPENEDPRG)
+		{
+			char *tsvfn;
+			sprintf(tsvfn,"%u.mpp",LSVFID);
+			FILE *fppnfn;
+			fppnfn=fopen(tsvfn,"wb+");
+			if(fppnfn==NULL)
+			{
+				msgbox("File save error","Error");
+				return;
+			}
+			int i,tncnt=prglabelarr.nitems();
+			fPRGINSTR tfpinstr;
+			for(i=1;i<=tncnt;i++)
+			{
+				strcpy(tfpinstr.flabel,prglabelarr.getnode(i).getstr());
+				strcpy(tfpinstr.fopcode,prgopcodearr.getnode(i).getstr());
+				strcpy(tfpinstr.foperand1,prgopr1arr.getnode(i).getstr());
+				strcpy(tfpinstr.foperand2,prgopr2arr.getnode(i).getstr());
+				fwrite(&tfpinstr,sizeof(tfpinstr),1,fppnfn);
+			}
+			fcloseall();
+		}
+	}
+	prglabelarr.deleteallnodes();
+	prgopcodearr.deleteallnodes();
+	prgopr1arr.deleteallnodes();
+	prgopr2arr.deleteallnodes();
+}
+
+void printregsval()
+{
+	printf("\nA:%d,B:%d,C:%d,D:%d,E:%d,H:%d,L:%d",*A,*B,*C,*D,*E,*H,*L);
+	printf("\nCF:%d,AF:%d,ZF:%d,SF:%d,PF:%d",CF,AF,ZF,SF,PF);
+}
+
+STR eopr1,eopr2;
+
+int execute(STR tmn,STR topr1,STR topr2)
+{
+	tmn=alltrim(tmn);
+	topr1=alltrim(topr1);
+	topr2=alltrim(topr2);
+	if(len(tmn)<=0&&len(topr1)<=0&&len(topr2)<=0) return(TRUE);
+	if(!isvalidmnemonic(tmn))
+	{
+		char *s;
+		sprintf(s,"Invalid Mnemonic: %s",tmn.getstr());
+		msgbox(s,"Program Error");
+		return(TRUE);
+	}
+	int i,tf,flag1,flag2 ;
+	char c1,c2;
+	void (*tfnptr)();
+	flag1=FALSE;
+	flag2=FALSE;
+	for(i=0;i<74;i++)
+	{
+		if(iset[i].getmnemonic()==tmn)
+		{
+			c1=iset[i].getopr1type();
+			c2=iset[i].getopr2type();
+			flag1=FALSE;
+			flag2=FALSE;
+			if(c1==SPC)
+			{
+				if(isSPC(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==REG)
+			{
+				if(isREG(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==RPX)
+			{
+				if(isRPX(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==RP1)
+			{
+				if(isRP1(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==RP2)
+			{
+				if(isRP2(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==MEM)
+			{
+				if(isMEM(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==D08)
+			{
+				if(isD08(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==D16)
+			{
+				if(isD16(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==PSW)
+			{
+				if(isPSW(topr1))
+					flag1=TRUE;
+			}
+			else if(c1==NNN)
+			{
+				if(isNNN(topr1))
+					flag1=TRUE;
+			}
+			if(c2==SPC)
+			{
+				if(len(topr2)<=0)
+					flag2=TRUE;
+			}
+			else if(c2==REG)
+			{
+				if(isREG(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==RPX)
+			{
+				if(isRPX(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==RP1)
+			{
+				if(isRP1(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==RP2)
+			{
+				if(isRP2(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==MEM)
+			{
+				if(isMEM(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==D08)
+			{
+				if(isD08(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==D16)
+			{
+				if(isD16(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==PSW)
+			{
+				if(isPSW(topr2))
+					flag2=TRUE;
+			}
+			else if(c2==NNN)
+			{
+				if(isNNN(topr2))
+					flag2=TRUE;
+			}
+			if(flag1==TRUE&&flag2==TRUE)
+			{
+				eopr1=topr1;
+				eopr2=topr2;
+				tfnptr=iset[i].instrfunc;
+				break;
+			}
+		}
+		else if(left(tmn,1)=="J"||left(tmn,1)=="C")
+		{
+			c1=iset[i].getopr1type();
+			c2=iset[i].getopr2type();
+			flag1=FALSE;
+			flag2=FALSE;
+			if(isD16(topr1)) flag1=TRUE;
+			if(isSPC(topr2)) flag2=TRUE;
+			if(flag1==TRUE&&flag2==TRUE)
+			{
+				eopr1=topr1;
+				eopr2=topr2;
+				tfnptr=iset[i].instrfunc;
+				break;
+			}
+		}
+		else if(left(tmn,1)=="R")
+		{
+			c1=iset[i].getopr1type();
+			c2=iset[i].getopr2type();
+			flag1=FALSE;
+			flag2=FALSE;
+			if(isSPC(topr1)) flag1=TRUE;
+			if(isSPC(topr2)) flag2=TRUE;
+			if(flag1==TRUE&&flag2==TRUE)
+			{
+				eopr1=topr1;
+				eopr2=topr2;
+				tfnptr=iset[i].instrfunc;
+				break;
+			}
+		}
+	}
+	if(flag1==FALSE||flag2==FALSE)
+	{
+		msgbox("Invalid Operands","Program Error");
+		return(TRUE);
+	}
+	(*tfnptr)();
+	int tflg=TRUE;
+	if(tmn=="HLT") tflg=FALSE;
+	return(tflg);
+}
+
+// dtr instruction functions
+void MOVREGREG()
+{
+	BYTE rpos1,rpos2;
+	rpos1=regpos(eopr1);
+	rpos2=regpos(eopr2);
+	*(regptr+rpos1)=*(regptr+rpos2);
+}
+
+void MOVREGMEM()
+{
+	BYTE rpos1=regpos(eopr1);
+	*(regptr+rpos1)=ADDR.getval(rpxval(H));
+}
+
+void MOVMEMREG()
+{
+	BYTE rpos2=regpos(eopr2);
+	ADDR.setval(rpxval(H),*(regptr+rpos2));
+}
+
+void MVIREGD08()
+{
+	BYTE rpos1=regpos(eopr1);
+	*(regptr+rpos1)=xtod(eopr2);
+}
+
+void MVIMEMD08()
+{
+	ADDR.setval(rpxval(H),xtod(eopr2));
+}
+
+void LDA()
+{
+	*A=ADDR.getval(xtod(eopr1));
+}
+
+void LDAX()
+{
+	BYTE rpos1=regpos(eopr1);
+	*A=ADDR.getval(rpxval(regptr+rpos1));
+}
+
+void LXI()
+{
+	if(eopr1=="SP")
+	{
+		//SP.setnode(SP.ntop(),xtod(eopr2));
+		return;
+	}
+	BYTE rpos1=regpos(eopr1);
+	*(regptr+rpos1)=lowbyte(xtod(eopr2));
+	*(regptr+rpos1+1)=highbyte(xtod(eopr2));
+}
+
+void LHLD()
+{
+	*L=ADDR.getval(xtod(eopr1));
+	*H=ADDR.getval(xtod(eopr1)+1);
+}
+
+void STA()
+{
+	ADDR.setval(xtod(eopr1),*A);
+}
+
+void STAX()
+{
+	BYTE rpos1=regpos(eopr1);
+	ADDR.setval(rpxval(regptr+rpos1),*A);
+}
+
+void SHLD()
+{
+	ADDR.setval(xtod(eopr1),*L);
+	ADDR.setval(xtod(eopr1)+1,*H);
+}
+
+void SPHL()
+{
+	//SP.setnode(SP.ntop(),rpxval(H));
+}
+
+void XCHG()
+{
+	BYTE t1=*D,t2=*E;
+	*D=*H;
+	*E=*L;
+	*H=t1;
+	*L=t2;
+}
+
+void XTHL()
+{
+	BYTE t1=lowbyte(SP.getnode(SP.ntop()));
+	BYTE t2=highbyte(SP.getnode(SP.ntop()));
+	SP.setnode(SP.ntop(),rpxval(H));
+	*L=t1;
+	*H=t2;
+}
+
+void PUSHREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	SP.pushnode(rpxval(regptr+rpos1));
+}
+
+void PUSHPSW()
+{
+}
+
+void POPREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	setrpval(regptr+rpos1,SP.getnode(SP.ntop()));
+	SP.popnode();
+}
+
+void POPPSW()
+{
+}
+
+void IN()
+{
+}
+
+void OUT()
+{
+}
+
+// art instruction functions
+void affectflags(BYTE res)
+{
+	STR bin=dtob(res);
+	if(len(bin)<8) bin=replicate(chr(32),8-len(bin))+bin;
+	if(bin.getchr(0)=='1')   SF=1; else SF=0;
+	if(res==0)               ZF=1; else ZF=0;
+	if(occurs(bin,"1")%2==0) PF=1; else PF=0;
+}
+
+void ADDREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	int t=*A;
+	*A+=*(regptr+rpos1);
+	affectflags(*A);
+	if(*A<t) CF=1; else CF=0;
+}
+
+void ADDMEM()
+{
+	*A+=ADDR.getval(rpxval(H));
+	affectflags(*A);
+}
+
+void ADI()
+{
+	*A+=xtod(eopr1);
+	affectflags(*A);
+}
+
+void ADCREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*A+=(*(regptr+rpos1)+CF);
+	affectflags(*A);
+}
+
+void ADCMEM()
+{
+	*A+=(ADDR.getval(rpxval(H))+CF);
+	affectflags(*A);
+}
+
+void ACI()
+{
+	*A+=(xtod(eopr1)+CF);
+	affectflags(*A);
+}
+
+void DAA()
+{
+	STR bin=dtob(*A);
+	bin=replicate('0',8-len(bin))+bin;
+	STR lnibb=right(bin,4);
+	if(btod(lnibb)>9) lnibb=dtob(btod(lnibb)+6);
+	STR unibb=left(bin,4);
+	if(btod(unibb)>9) unibb=dtob(btod(unibb)+6);
+	if(len(lnibb)>4) lnibb=right(lnibb,4);
+	if(len(unibb)>4) unibb=left(unibb,4);
+	lnibb=replicate('0',4-len(lnibb))+lnibb;
+	unibb=replicate('0',4-len(unibb))+unibb;
+	*A=btod(unibb+lnibb);
+	affectflags(*A);
+}
+
+void DAD()
+{
+	WORD rpval;
+	if(eopr1=="SP") return; //rpval=rpxval(SP);
+	else rpval=rpxval(regptr+regpos(eopr1));
+	rpval+=rpxval(H);
+	setrpval(H,rpval);
+}
+
+BYTE SUB(BYTE v1,BYTE v2)
+{
+	int d;
+	d=v1+(~v2+1);
+	return(d);
+}
+
+void SUBREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*A=SUB(*A,*(regptr+rpos1));
+	affectflags(*A);
+}
+
+void SUBMEM()
+{
+	*A=SUB(*A,ADDR.getval(rpxval(H)));
+	affectflags(*A);
+}
+
+void SUI()
+{
+	*A=SUB(*A,xtod(eopr1));
+	affectflags(*A);
+}
+
+void SBBREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*A=SUB(*A,*(regptr+rpos1)+CF);
+	affectflags(*A);
+}
+
+void SBBMEM()
+{
+	*A=SUB(*A,ADDR.getval(rpxval(H))+CF);
+	affectflags(*A);
+}
+
+void SBI()
+{
+	*A=SUB(*A,xtod(eopr1)+CF);
+	affectflags(*A);
+}
+
+void INRREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*(regptr+rpos1)=*(regptr+rpos1)+1;
+	affectflags(*(regptr+rpos1));
+}
+
+void INRMEM()
+{
+	ADDR.setval(rpxval(H),ADDR.getval(rpxval(H))+1);
+	affectflags(ADDR.getval(rpxval(H)));
+}
+
+void INX()
+{
+	BYTE *rp;
+	if(eopr1=="SP") return; //rp=SP;
+	else rp=(regptr+regpos(eopr1));
+	setrpval(rp,getrpval(rp)+1);
+}
+
+void DCRREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*(regptr+rpos1)=*(regptr+rpos1)-1;
+	affectflags(*(regptr+rpos1));
+}
+
+void DCRMEM()
+{
+	ADDR.setval(rpxval(H),ADDR.getval(rpxval(H))-1);
+	affectflags(ADDR.getval(rpxval(H)));
+}
+
+void DCX()
+{
+	BYTE *rp;
+	if(eopr1=="SP") return; //rp=SP;
+	else rp=(regptr+regpos(eopr1));
+	setrpval(rp,getrpval(rp)-1);
+}
+
+// log instruction functions
+void ANAREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*A=*A&*(regptr+rpos1);
+	affectflags(*A);
+	CF=0;
+	AF=1;
+}
+
+void ANAMEM()
+{
+	*A=*A&ADDR.getval(rpxval(H));
+	affectflags(*A);
+	CF=0;
+	AF=1;
+}
+
+void ANI()
+{
+	*A=*A&xtod(eopr1);
+	affectflags(*A);
+	CF=0;
+	AF=1;
+}
+
+void ORAREG()
+{
+	BYTE rpos1=regpos(eopr1);
+	*A=*A|*(regptr+rpos1);
+	affectflags(*A);
+	CF=AF=0;
+}
+
+void ORAMEM()
+{
+	*A=*A|ADDR.getval(rpxval(H));
+	affectflags(*A);
+	CF=AF=0;
+}
+
+void ORI()
+{
+	*A=*A|xtod(eopr1);
+	affectflags(*A);
+	CF=AF=0;
+}
+
+void XRAREG()
+{
+	*A=*A^*(regptr+regpos(eopr1));
+	affectflags(*A);
+	CF=AF=0;
+}
+
+void XRAMEM()
+{
+	*A=*A^ADDR.getval(rpxval(H));
+	affectflags(*A);
+	CF=AF=0;
+}
+
+void XRI()
+{
+	*A=*A^xtod(eopr1);
+	affectflags(*A);
+	CF=AF=0;
+}
+
+void CMPREG()
+{
+	BYTE t=SUB(*A,*(regptr+regpos(eopr1)));
+	affectflags(t);
+}
+
+void CMPMEM()
+{
+	BYTE t=SUB(*A,ADDR.getval(rpxval(H)));
+	affectflags(t);
+}
+
+void CPI()
+{
+	BYTE t=SUB(*A,xtod(eopr1));
+	affectflags(t);
+}
+
+void CMA()
+{
+	*A=~*A;
+}
+
+void CMC()
+{
+	CF=CF==1?0:1;
+}
+
+void STC()
+{
+	CF=1;
+}
+
+void RLC()
+{
+}
+
+void RAL()
+{
+}
+
+void RRC()
+{
+}
+
+void RAR()
+{
+}
+
+// brn instruction functions
+void JMP()
+{
+}
+
+void JXX()
+{
+}
+
+void CALL()
+{
+}
+
+void CXX()
+{
+}
+
+void RET()
+{
+}
+
+void RXX()
+{
+}
+
+void RST()
+{
+}
+
+void PCHL()
+{
+}
+
+// mcl instruction functions
+void SIM()
+{
+}
+
+void RIM()
+{
+}
+
+void DI()
+{
+}
+
+void EI()
+{
+}
+
+void HLT()
+{
+}
+
+void NOP()
+{
+	return;
+}
+
+void clearregisters()
+{
+	*A=0;
+	*B=0;
+	*C=0;
+	*D=0;
+	*E=0;
+	*H=0;
+	*L=0;
+	SP.popallnodes();
+	SP.pushnode(tgword);
+}
+
+void showregisters()
+{
+	xyprint(46,7,"A: ",7,4);
+	xyprint(49,7,bytetox(*A),7,0);
+	xyprint(46,8,"B: ",7,4);
+	xyprint(49,8,bytetox(*B),7,0);
+	xyprint(46,9,"C: ",7,4);
+	xyprint(49,9,bytetox(*C),7,0);
+	xyprint(46,10,"D: ",7,4);
+	xyprint(49,10,bytetox(*D),7,0);
+	xyprint(46,11,"E: ",7,4);
+	xyprint(49,11,bytetox(*E),7,0);
+	xyprint(46,12,"H: ",7,4);
+	xyprint(49,12,bytetox(*H),7,0);
+	xyprint(46,13,"L: ",7,4);
+	xyprint(49,13,bytetox(*L),7,0);
+	xyprint(45,15,"SF:",7,4);
+	text_color(7,0);
+	gotoxy(49,15);
+	cprintf("%1d",SF);
+	xyprint(45,16,"ZF:",7,4);
+	text_color(7,0);
+	gotoxy(49,16);
+	cprintf("%1d",ZF);
+	xyprint(45,17,"PF:",7,4);
+	text_color(7,0);
+	gotoxy(49,17);
+	cprintf("%1d",PF);
+	xyprint(45,18,"CF:",7,4);
+	text_color(7,0);
+	gotoxy(49,18);
+	cprintf("%1d",CF);
+	//xyprint(45,15,"SP: ",7,4);
+	//xyprint(49,15,bytetox(lowbyte(SP.getnode(SP.ntop()))),7,0);
+	//xyprint(49,16,bytetox(highbyte(SP.getnode(SP.ntop()))),7,0);
+}
+
+void showaddresses(WORD pos)
+{
+	int i;
+	for(i=0;i<=10;i++)
+	{
+		xyprint(64,7+i,wordtox(pos+i),7,4);
+		xyprint(70,7+i,bytetox(ADDR.getval(pos+i)),7,0);
+	}
+}
+
+void prgscreen()
+{
+	textmode(C80);
+	clearscreen();
+	cursor_off();
+	tbar(1,1,80,25,1,1);
+	TWINDOW tw1(5,5,31,15,"8085 Program");
+	TWINDOW tw2(41,5,15,15,"Registers");
+	TWINDOW tw3(61,5,15,15,"Addresses");
+	xyprint(6,7,"     LABEL OPCODE  OPERANDS ",7,4);
+	thline(8,6,34,SINGLE_BORDER,NORMALLINE,7,4);
+	xyprint(8,21,"^Add ^Ins ^Del ^Run ^Trace",1,3);
+	xyprint(9,21,"A",1,7);
+	xyprint(14,21,"I",1,7);
+	xyprint(19,21,"D",1,7);
+	xyprint(24,21,"R",1,7);
+	xyprint(29,21,"T",1,7);
+	xyprint(46,21,"^Clear",1,3);
+	xyprint(48,21,"l",1,7);
+	STR tstr("^Q-  ^Z-  ^Set");
+	tstr.setchr(3,chr(24));
+	tstr.setchr(8,chr(25));
+	xyprint(62,21,tstr,1,3);
+	xyprint(63,21,"Q",1,7);
+	xyprint(68,21,"Z",1,7);
+	xyprint(74,21,"e",1,7);
+	showregisters();
+	showaddresses(xtod("4150"));
+}
+
+int getmenu(STR tmnmnstr[],STR tmnhlpstr[],int maxlines,int col,int row)
+{
+	int n=1,i,maxlen=len(tmnmnstr[0]);
+	for(i=1;i<maxlines;i++) if(maxlen<len(tmnmnstr[i])) maxlen=len(tmnmnstr[i]);
+	tbox(col,row,col+maxlen+3,row+maxlines+1,SINGLE_BORDER,0,14);
+	int key=0;
+	do
+	{
+		for(i=0;i<maxlines;i++)
+		{
+			if(tmnmnstr[i]=="-") thline(row+i+1,col,col+maxlen+3,SINGLE_BORDER,EDGEDLINE,0,14);
+			else
+			{
+				text_color(0,7);
+				gotoxy(col+1,row+i+1);
+				cprintf(" %-*s ",maxlen,tmnmnstr[i].getstr());
+			}
+		}
+		if(tmnmnstr[n-1]=="-"&&key==80) n++;
+		if(tmnmnstr[n-1]=="-"&&key==72) n--;
+		text_color(7,0);
+		gotoxy(col+1,row+n);
+		cprintf(" %-*s ",maxlen,tmnmnstr[n-1].getstr());
+		text_color(7,0);
+		gotoxy(8,25);
+		cprintf(" %-*s ",70,tmnhlpstr[n-1].getstr());
+		key=getscan(1);
+		if(key==UPARROWKEY) n--;
+		if(key==DNARROWKEY) n++;
+		if(n<1) n=maxlines;
+		if(n>maxlines) n=1;
+	}while(key!=ENTERKEY&&key!=SPACEBARKEY);
+	return(n);
+}
+
+int scrollmenu(int maxlines,int displines,int maxlen,int col,int row)
+{
+	if(displines>maxlines) displines=maxlines;
+	int n=1,i,dispst=1,key;
+	do
+	{
+		if(maxlines>2)
+		{
+			for(i=0;i<displines;i++) xyprint(col+maxlen,row+i,176,1,14);
+			xyprint(col+maxlen,row,24,1,14);
+			xyprint(col+maxlen,row+displines-1,25,1,14);
+			xyprint(col+maxlen,row+1+((float(n)/float(maxlines))*(displines-3)),219,1,14);
+		}
+		text_color(7,1);
+		for(i=0;i<displines;i++)
+		{
+			gotoxy(col,row+i);
+			cprintf("%-*s",maxlen,tstrsprgs.getnode(dispst+i));
+		}
+		text_color(1,7);
+		gotoxy(col,row+(n-dispst));
+		cprintf("%-*s",maxlen,tstrsprgs.getnode(n));
+		key=getscan(0);
+		if(key==UPARROWKEY)
+		{
+			if(n-dispst<=0) dispst--;
+			if(dispst<1) dispst=1;
+			n--;
+			if(n<1)
+			{
+				dispst=maxlines-displines+1;
+				n=maxlines;
+			}
+		}
+		if(key==DNARROWKEY)
+		{
+			if(n-dispst>=displines-1) dispst++;
+			if(dispst>maxlines) dispst=maxlines;
+			n++;
+			if(n>maxlines)
+			{
+				dispst=1;
+				n=1;
+			}
+		}
+		if(key==PGUPKEY)
+		{
+			dispst-=displines;
+			if(dispst<1) dispst=1;
+			n-=displines;
+			if(n<1) n=1;
+		}
+		if(key==PGDNKEY)
+		{
+			dispst+=displines;
+			if(dispst>=maxlines-displines+1) dispst=maxlines-displines+1;
+			n+=displines;
+			if(n>maxlines) n=maxlines;
+		}
+		if(key==CTRLHOMEKEY||key==CTRLPGUPKEY)
+		{
+			dispst=1;
+			n=1;
+		}
+		if(key==CTRLENDKEY||key==CTRLPGDNKEY)
+		{
+			dispst=maxlines-displines+1;
+			n=maxlines;
+		}
+	}while(key!=ENTERKEY&&key!=ESCKEY);
+	if(key==ESCKEY) n=0;
+	return(n);
+}
+
+void startgscreen()
+{
+	int tx,ty,tw,th;
+	initialize_graphics();
+	setcolor(7);
+	GWINDOW gw1(150,100,MAXX-300,MAXY-200,"PRO-85 Release 1");
+	gbstack.popallnodes();
+	GBUTTON gb1(370,335,100,30,"Continue",mainmenu);
+	draw3dghline(315,170,300);
+	draw3dghline(210,170,300);
+	setcolor(1);
+	settextstyle(0,0,3);
+	outtextxy(170,140,"PRO-85");
+	settextstyle(2,0,4);
+	outtextxy(315,150,"Release 1 dt. 15th Aug 2002");
+	setcolor(1);
+	outtextxy(170,170,"An Intel 8085 MicroProcessor Programming Kit");
+	setcolor(0);
+	outtextxy(170,190,"(Includes an interactive Internal Architecture)");
+	tw=textwidth("Designed & Programmed by,");
+	tx=(MAXX-tw)/2;
+	setcolor(5);
+	outtextxy(tx,220,"Designed & Programmed by,");
+	settextstyle(0,0,2);
+	tw=textwidth("A.Prabu");
+	tx=(MAXX-tw)/2;
+	setcolor(4);
+	outtextxy(tx,240,"A.Prabu");
+	settextstyle(0,0,1);
+	tw=textwidth("III year B.E. CSE");
+	tx=(MAXX-tw)/2;
+	setcolor(0);
+	outtextxy(tx,265,"III year B.E. CSE");
+	settextstyle(0,0,1);
+	tw=textwidth("Hindusthan College of Engg. & Tech.,");
+	tx=(MAXX-tw)/2;
+	setcolor(4);
+	outtextxy(tx,285,"Hindusthan College of Engg. & Tech.,");
+	settextstyle(0,0,1);
+	tw=textwidth("Coimbatore - 32.");
+	tx=(MAXX-tw)/2;
+	setcolor(5);
+	outtextxy(tx,300,"Coimbatore - 32.");
+	settextstyle(2,0,5);
+	setcolor(0);
+	outtextxy(170,335,"www.aprabu.8m.com");
+	outtextxy(170,350,"cincoutprabu@yahoo.com");
+	gmouse.initialize();
+	gmouse.showpointer();
+	gmouse.setpointer(0,0);
+	readgbuttons();
+}
+
+void scrollregion()
+{
+	int i,lines=0,ptr=0,key=0,page=1;
+	int dstart=0,dmaxsize=14,maxpage=0,x=0;
+	float scrlp=1.00;
+	char ch,strs[1][2];
+	FILE *fphlp;
+	if((fphlp=fopen("mp8085.hlp","r"))==NULL)
+	{
+		msgbox("Cannot open file: mp8085.hlp","File Open Error");
+		return;
+	}
+	while((ch=fgetc(fphlp))!=EOF)
+	{
+		ptr++;
+		if(ch=='\n')
+		{
+			lines++;
+			if(lines%14==0) maxpage++;
+		}
+	}
+	rewind(fphlp);
+	for(i=0;i<lines;i++) fgets(strs[i],80,fphlp);
+	do
+	{
+		text_color(0,7);
+		switch(key)
+		{
+			case ESCKEY:
+				break;
+			case UPARROWKEY:
+				dstart--;
+				if(dstart%14==0) page--;
+				break;
+			case DNARROWKEY:
+				dstart++;
+				if(dstart%14==0) page++;
+				break;
+			case PGUPKEY:
+				dstart-=14;
+				page--;
+				break;
+			case PGDNKEY:
+				dstart+=14;
+				page++;
+				break;
+		}
+		if(page>=1) page--;
+		if(page<maxpage) page++;
+		if(key==CTRLHOMEKEY||key==CTRLPGUPKEY)
+		{
+			dstart=0;
+			page=1;
+		}
+		if(key==CTRLENDKEY||key==CTRLPGDNKEY) // Ctrl+End || Ctrl+PageDown //
+		{
+			dstart=lines-14;
+			page=maxpage;
+		}
+		if(dstart<=0) dstart=0;
+		if(dstart>=lines-14) dstart=lines-14;
+		if(dstart<=0) page=1;
+		if(dstart>=lines-14) page=maxpage;
+		for(i=0;i<14;i++)
+			xyprint(13,7+i,space(58),0,7);
+		x=0;
+		for(i=dstart;i<dstart+dmaxsize;i++,x++)
+			xyprint(13,7+x,strs[i],0,7);
+		textcolor(11);
+		gotoxy(58,6);
+		cprintf("Page %3d of %3d",page,maxpage);
+		textbackground(6);
+		textcolor(0);
+		for(i=7;i<=21;i++)
+		{
+			gotoxy(73,i);
+			cprintf("%c",177);
+		}
+		gotoxy(73,8+scrlp);
+		cprintf("%c",177);
+		gotoxy(73,7);
+		cprintf("%c",24);
+		gotoxy(73,21);
+		cprintf("%c",25);
+		scrlp=(((((float)(dstart+1))/((float)lines))*100)/8.00);
+		gotoxy(73,8+scrlp);
+		cprintf("%c",32);
+		key=getscan(1);
+	}while(key!=ESCKEY);
+	fclose(fphlp);
+}
+
+void about8085()
+{
+	int i,j,tx;
+	restorecrtmode();
+	textmode(C80);
+	clearscreen();
+	cursor_off();
+	tbar(1,1,7,25,1,15);
+	STR tstr("About 8085");
+	tx=((25-len(tstr))/2)+1;
+	text_color(1,15);
+	for(i=tx,j=0;i<=tx+len(tstr);i++,j++)
+	{
+		gotoxy(4,i);
+		cprintf("%c",tstr.getchr(j));
+	}
+	tbox(11,4,74,22,SINGLE_BORDER,0,14);
+	xyprint(12,5,padc("About 8085",62),3,15);
+	xyprint(8,25,padr(" Use     Up,Dn,    PgUp,PgDn,    Ctrl+Home,Ctrl+End     keys to scroll",71),7,0);
+	scrollregion();
+	mainmenu();
+}
+
+void mainmenu()
+{
+	int i,j,tx;
+	restorecrtmode();
+	textmode(C80);
+	clearscreen();
+	cursor_off();
+	tbar(1,1,7,25,1,15);
+	STR tstr("PRO 85");
+	tx=((25-len(tstr))/2)+1;
+	text_color(1,15);
+	for(i=tx,j=0;i<=tx+len(tstr);i++,j++)
+	{
+		gotoxy(4,i);
+		cprintf("%c",tstr.getchr(j));
+	}
+	STR tmnmnstr[]={
+				"New Program",
+				"Open Program",
+				"8085 Architecture",
+				"About 8085",
+				"-",
+				"About...",
+				"Quit"
+			};
+	STR tmnhlpstr[]={
+				"Lets you do a new Program",
+				"Displays a list of saved Programs to select one",
+				"Explains Internal Architecture of 8085 Microprocessor",
+				"Lets you know about 8085 Microprocessor",
+				"-",
+				"Displays Credits",
+				"Quits the Software"
+			};
+	int choice;
+	choice=getmenu(tmnmnstr,tmnhlpstr,7,33,8);
+	switch(choice)
+	{
+		case 1:
+			newprogram();
+			break;
+		case 2:
+			openprogram();
+			break;
+		case 3:
+			draw8085architecture();
+			break;
+		case 4:
+			about8085();
+			break;
+		case 6:
+			startgscreen();
+			break;
+		case 7:
+			quit();
+			break;
+	}
+	mainmenu();
+}
+
+void func1()
+{
+}
+
+void main()
+{
+	startgscreen();
+//	initialize_graphics();
+// 	GBUTTON gb1(370,335,100,30,"Continue",func1);
+//	GBUTTON gb2(100,100,100,30,"Prabu",func1);
+//	GBUTTON gb3(50,250,100,30,"Siva",func1);
+//	gmouse.initialize();
+//	gmouse.showpointer();
+//	gmouse.setpointer(0,0);
+//	readgbuttons();
+}

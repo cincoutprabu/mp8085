@@ -1,0 +1,332 @@
+Evolution of MicroProcessor:
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+     History shows us that the ancient Babylonians first
+began using the abacus (a primitive calculator made of
+beads) in about 500 B.C.  This simple calculating machine
+eventually sparked humanmind into the development of
+calculating machinery that uses gears and wheels (Blaise
+Pascal in 1642).  Refinements continued with the giant
+computing machines of the 1940s and 1950s constructed
+with relays and vacuum tubes.  Next the transistor and
+solid-state electronics were used to build the mighty
+computers in the 1960s.  Finally, the advent of the
+Integrated Circuits (ICs) lead to the development of the
+microprocessors and microprocessor - based computer
+system.
+
+     In 1971, Intel Corporation released the world's
+first microprocessor - the INTEL 4004, a 4-bit
+microprocessor.  It addesses 4096 memory locations of
+word size 4-bit.  The instructions set consist of 45
+different instructions.  The INTEL 4004 was soon followed
+by a variety of microprocessors, with most of the major
+semiconductor manufacturers producing one or more types.
+
+     A variety of microprocessors were produced using
+PMOS, NMOS and HMOS technologies.  The chip size, no. of
+pins, no. of on-chip decoded timing signals, ability to
+address large memory spaces, ability to address more
+I/O ports, faster operation, more powerful instruction
+set, no. of levels of subroutine nesting and better
+interrupt handling capabilities keeps on increasing on
+each of the new microprocessor.  Various companies like
+Intel, Motorola, Zilog, etc. started introducing various
+new types of microprocessors.  Circuit densities and
+speed power product of each new microprocessor gets
+increased with time.
+
+     Some of the general applications of the
+microprocessors are: calculators, game machines,
+accounting systems, intelligent instrumentation, home
+appliances, low and special purpose applications,
+complex industrial controllers, instrumentation,
+communications preprocessors, intelligent terminals,
+process control systems, militiary applications, data
+acquisition systems, business and data processing
+applications, sophiscated real time control, advanced
+communications, distributed processing networks, general
+purpose computing applications requiring mainframe,
+multi-user, multi-function environments, office
+information equipment, etc.  Almost in every field of
+science, Microprocessors has shown their power.
+
+
+What is 8085 ?
+ßßßßßßßßßßßßßß
+     INTEL 8085 is an 8-bit microprocessor.  It was
+introduced by Intel Company, in mid 1970s.  It operates
+on 8-bit data and uses 16-bit address.  Since it uses
+16-bit address, it can directly address 2^16 = 65536 = 64K
+memory locations.  The 8085 is designed using NMOS
+transistors in 40 pin DIP (Dual In-line Package).  It
+requires a single power supply of +5 volts.  The 8085
+generates a clock signal internally and divide by two for
+internal operations.
+
+     The NMOS 8085 is available in two versions 8085A and
+8085A-2 with maximum internal clock frequency of 3.03 MHz
+respectively.  The enhanced version of 8085 is designed
+with HMOS transistors.  It is available in three versions
+8085AH, 8085AH-2 and 8085AH-1 with maximum internal clock
+freqency of 3 MHz, 5 MHz and 6 MHz respectively.
+
+
+Pin Configuration of 8085:
+ßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+     The following diagram shows the various pins used
+for various signals:
+
+                    ÚÄÄÄÄÄÄÄÄÄvÄÄÄÄÄÄÄÄÄ¿
+             X1 ÄÄÄ>³                   ³<ÄÄÄ Vcc (+5V)
+             X2 ÄÄÄ>³                   ³<ÄÄÄ HOLD
+      RESET OUT ÄÄÄ>³                   ³<ÄÄÄ HLDA
+            SOD ÄÄÄ>³                   ³<ÄÄÄ CLK (OUT)
+            SID ÄÄÄ>³                   ³<ÄÄÄ RESET IN^
+           TRAP ÄÄÄ>³                   ³<ÄÄÄ READY
+        RST 7.5 ÄÄÄ>³                   ³<ÄÄÄ IO/M^
+        RST 6.5 ÄÄÄ>³                   ³<ÄÄÄ S1
+        RST 5.5 ÄÄÄ>³                   ³<ÄÄÄ RD^
+           INTR ÄÄÄ>³       8085A       ³<ÄÄÄ WR^
+          INTA^ ÄÄÄ>³                   ³<ÄÄÄ ALE
+            AD0 ÄÄÄ>³                   ³<ÄÄÄ S0 
+            AD1 ÄÄÄ>³                   ³<ÄÄÄ A15
+            AD2 ÄÄÄ>³                   ³<ÄÄÄ A14
+            AD3 ÄÄÄ>³                   ³<ÄÄÄ A13
+            AD4 ÄÄÄ>³                   ³<ÄÄÄ A12
+            AD5 ÄÄÄ>³                   ³<ÄÄÄ A11
+            AD6 ÄÄÄ>³                   ³<ÄÄÄ A10
+            AD7 ÄÄÄ>³                   ³<ÄÄÄ A9
+            Vss ÄÄÄ>³                   ³<ÄÄÄ A8
+                    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+     ^ indicates that, that symbol is written with a
+bar over its name.
+
+  ÚÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+  ³   Pin   ³       Description       ³     Type      ³
+  ÃÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+  ³ AD0-AD7 ³ Address / Data bus      ³ Bidirection/  ³
+  ³         ³                         ³ Tristate      ³
+  ³ A8-A15  ³ Address Bus             ³ Output/       ³
+  ³         ³                         ³ Tristate      ³
+  ³ ALE     ³ Address Latch Enable    ³ Output/       ³
+  ³         ³                         ³ Tristate      ³
+  ³ RD^     ³ Read Control            ³ Output/       ³
+  ³         ³                         ³ Tristate      ³
+  ³ WR^     ³ Write Control           ³ Output/       ³
+  ³         ³                         ³ Tristate      ³
+  ³ IO/M^   ³ I/O or memory indicator ³ Output/       ³
+  ³         ³                         ³ Tristate      ³
+  ³ S0,S1   ³ Bus State Indicator     ³ Output        ³
+  ³ READY   ³ Wait state request      ³ Input         ³
+  ³ SID     ³ Serial Input Data       ³ Input         ³
+  ³ SOD     ³ Serial Output Data      ³ Output        ³
+  ³ HOLD    ³ HOLD request            ³ Input         ³
+  ³ HLDA    ³ HOLD acknowledge        ³ Output        ³
+  ³ INTR    ³ Interrupt request       ³ Input         ³
+  ³ TRAP    ³ Nonmaskable interrupt   ³ Input         ³
+  ³ RST 5.5 ³ Hardware vector intrpt. ³ Input         ³
+  ³ RST 6.5 ³ Hardware vector intrpt. ³ Input         ³
+  ³ RST 7.5 ³ Hardware vector intrpt. ³ Input         ³
+  ³ INTA^   ³ Interrupt acknowledge   ³ Output        ³
+  ³ RESETIN^³ System reset            ³ Input         ³
+  ³ RESTOUT^³ Peripherals reset       ³ Output        ³
+  ³ X1,X2   ³ Crystal/RC connection   ³ Input         ³
+  ³ CLK(OUT)³ Clock signal            ³ Output        ³
+  ³ Vcc,Vss ³ Power, Ground           ³ -             ³
+  ÀÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+     The low-order address byte and data lines AD0-AD7
+are multiplexed.  At the beginning of a machine cycle
+the address is given out AD0 to AD7 and it is latched
+into external latch by using ALE.  Then the lines AD0
+-AD7 are used to carry data.  The pins A8-A15 are
+unidirectional and contain the high byte of the address.
+
+     The RD^ signal is asserted low by the 8085 during a
+memory or I/O read operation.  Similarly, the WR^ pin
+signal is asserted low during a memory or I/O write
+operation.
+
+     The IO/M^, S0 and S1 are output by the 8085 during
+its internal operations, which can be interpreted as in
+the following table.
+
+     The READY input can be used by the slower external
+devices for obtaining extra time in order to communicate
+with the 8085.  The READY is made low to provide wait
+state clock periods in the machine cycles.
+
+     The HOLD and HLDA signals are used for the Direct
+Memory Access (DMA) type of data transfer.  The DMA
+controller place a HIGH on HOLD pin in order to take
+control of the system bus.  The HOLD function is
+acknowledged by the 8085 by placing a HIGH output on the
+HLDA pin.
+
+     The 8085 has five interrupt pins.  The order of
+priority of the interrupts is TRAP, RST 7.5, RST 6.5,
+RST 5.5 and INTR.  The interrupts TRAP, RST 7.5, RST 6.5,
+RST 5.5 are hardware vectored interrupt and are enabled
+by appropriate signals at the appropriate pins of 8085.
+When a vectored interrupt is enabled and if it is
+accepted then the program execution branches to vector
+addresses specified by Intel.  The interrupts RST 7.5,
+RST 6.5 and RST 5.5 are maskable interrupts by software.
+
+     The INTR is enabled by appropriate signal at its
+pin.  In order to service INTR one of the eight opcodes
+(RST 0 to RST 7) has to be provided on the 8085, AD0-AD7
+bus by external logic.  The 8085 then executes this
+instruction and vectors to the appropriate address to
+service the interrupts.  The vector address for an
+interrupt RST n is given by (08xn)H (TRAP is RST 4.5).
+The vector addresses are listed in the following table.
+
+   ÚÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿   ÚÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+   ³Intrpt.³ Vector Addr. ³   ³Intrpt.³ Vector Addr. ³
+   ÃÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´   ÃÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+   ³ RST 0 ³    0000H     ³   ³ RST 5 ³    0028H     ³
+   ³ RST 1 ³    0008H     ³   ³ RST5.5³    0020H     ³
+   ³ RST 2 ³    0010H     ³   ³ RST 6 ³    0030H     ³
+   ³ RST 3 ³    0018H     ³   ³ RST6.5³    0034H     ³
+   ³ RST 4 ³    0020H     ³   ³ RST 7 ³    0038H     ³
+   ³ TRAP  ³    0024H     ³   ³ RST7.5³    003CH     ³
+   ÀÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ   ÀÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ 
+
+     The 8085 has the clock generation circuit on the
+chip but an external quartz crystal or LC circuit or
+RC circuit should be connected at the pins X1 and X2.
+The frequency at X1 and X2 is divided by 2 internally
+for internal clock.  The frequency of output clock
+signal is same as that of internal clock.
+
+     The RESET IN^ signal, when pulsed LOW, causes the
+8085 to execute the first instruction at the 0000H
+location.  In addition, the 8085 resets instruction
+register, interrupt mask bits and other registers.  The
+RESET IN^ must be held LOW for at least three clock
+periods.
+
+
+Instruction execution and data flow in 8085:
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+     The program instructions are stored in memory which
+is an external device.  To execute the program in 8085,
+the starting address should be loaded in program counter.
+The 8085 the content of program counter in address bus
+and asserts read control signal low.  Also, the program
+counter is incremented.
+
+     The address and the read control signal enables the
+memory to output the content of memory location on the
+data bus.  Now, the content of data bus is the opcode of
+an instruction.  The read control signal is made high by
+timing and control unit after a specific time.  At the
+rising edge of read control signals the opcode is latched
+into microprocessor internal bus and placed in
+instruction register.
+
+     The instruction decoding unit, decodes the
+instructions and provides information to timing and
+control unit to take further actions.
+
+
+Origin of Software:
+ßßßßßßßßßßßßßßßßßßß
+
+     The software is a set of instructions or commands
+needed for performing a specific task by a programmable
+device.  The instructions needed for a programmable
+device should be written using the symbols 0s and 1s.
+The software development using 1s and 0s are called
+machine language programs.  The machine level programs
+are the first programs developed for programmable
+devices and machines.  The machine can understand only
+machine level programs.  But it is highly tedious for
+a programmer to write program in machine language.
+
+     Assembly level programs have been developed to
+simplify the programming task.  The assembly level
+programs are written using mnemonics.  The mnemonics
+are given by the manufacturers of the microprocessors.
+The assembly language programs are converted into
+machine language programs by a conversion software
+called Assembler.  Both the machine language and
+assembly language programs are machine dependent.
+
+
+Instruction Set:
+ßßßßßßßßßßßßßßßß
+
+     The 8085 has 74 basic instructions and 246
+total instructions.  The instruction set of 8085 is
+defined by the manufacturer Intel Corporation.  Each
+instruction has one-byte opcode.  With 8-bit binary
+code, we can generate 256 different binary codes.  In
+these, 246 codes have been used for opcodes.
+
+     The size of 8085 instruction can be 1,2 or 3 bytes.
+The 1-byte instruction has an opcode alone and the
+2-bytes instruction has an opcode followed by an eight
+bit address or data.  The 3-bytes instruction has an
+opcode followed by 16-bit address or data.  While storing
+the 3-bytes instruction in memory, the sequence of
+storage is, opcode first followed by low byte of address
+or data and then high byte of address or data.
+
+     The 8085 instruction set is divided into the
+following five functional classifications:
+
+               þ  Data Transfer Instructions
+               þ  Arithmetic Instructions
+               þ  Logical Instructions
+               þ  Branching Instructions
+               þ  Machine Control Instructions
+     
+
+Data Transfer Instructions:
+ßßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+     These instructions includes those which or
+copies data between registers or between memory
+locations and registers.  In all data transfer operations
+the content of source register is not altered.  Hence
+the data transfer is copying operation.
+
+
+Arithmetic Instructions:
+ßßßßßßßßßßßßßßßßßßßßßßßß
+
+     These instructions includes those which performs
+the addition, subtraction, increment or decrement
+operations.  The flag condicitions are altered after
+execution of an instruction by this group.
+
+
+Logical Instructions:
+ßßßßßßßßßßßßßßßßßßßßß
+
+     Instructions which performs the logical operations
+like AND, OR, EXCLUSIVE OR, complement, compare and
+rotate instructions are grouped under this heading.  The
+flag conditions are altered after execution of an
+instruction in this group.
+
+
+Branching Instructions:
+ßßßßßßßßßßßßßßßßßßßßßßß
+
+     The instructions that are used to transfer the
+program control from one memory location to another
+memory location are grouped under this heading.
+
+
+Machine Control Instructions:
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+
+     This includes the instructions related to interrupts
+and the instruction used to halt program execution.
