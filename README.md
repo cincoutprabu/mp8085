@@ -30,4 +30,4 @@ Following screenshots were taken by running the MP8085.EXE (generated years ago)
 
 # Help File
 
-Help file for the program is located [here](/MP8085.hlp).
+The original 'help file' included with the program is located [here](/MP8085.hlp).
