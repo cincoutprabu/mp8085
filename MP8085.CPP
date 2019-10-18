@@ -1181,11 +1181,11 @@ void credits()
 	cprintf("%c",201);
 	text_color(0,15);
 	gotoxy(25,18);
-	cprintf("   Web: www.aprabu.8m.com");
+	cprintf("   Web: www.codeding.com");
 	gotoxy(25,19);
-	cprintf("E-mail: cincoutprabu @ yahoo.com");
+	cprintf("E-mail: cincoutprabu @ gmail.com");
 	gotoxy(25,20);
-	cprintf("        cppprabu @ rediffmail.com");
+	cprintf("        ");
 	delay(1000);
 	strcpy(str,"Hindusthan College of Engg. & Tech.,");
 	l=strlen(str);
