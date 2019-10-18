@@ -1,5 +1,5 @@
 Evolution of MicroProcessor:
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+----------------------------
 
      History shows us that the ancient Babylonians first
 began using the abacus (a primitive calculator made of
@@ -53,7 +53,7 @@ science, Microprocessors has shown their power.
 
 
 What is 8085 ?
-ßßßßßßßßßßßßßß
+--------------
      INTEL 8085 is an 8-bit microprocessor.  It was
 introduced by Intel Company, in mid 1970s.  It operates
 on 8-bit data and uses 16-bit address.  Since it uses
@@ -73,70 +73,70 @@ freqency of 3 MHz, 5 MHz and 6 MHz respectively.
 
 
 Pin Configuration of 8085:
-ßßßßßßßßßßßßßßßßßßßßßßßßßß
+--------------------------
 
      The following diagram shows the various pins used
 for various signals:
 
-                    ÚÄÄÄÄÄÄÄÄÄvÄÄÄÄÄÄÄÄÄ¿
-             X1 ÄÄÄ>³                   ³<ÄÄÄ Vcc (+5V)
-             X2 ÄÄÄ>³                   ³<ÄÄÄ HOLD
-      RESET OUT ÄÄÄ>³                   ³<ÄÄÄ HLDA
-            SOD ÄÄÄ>³                   ³<ÄÄÄ CLK (OUT)
-            SID ÄÄÄ>³                   ³<ÄÄÄ RESET IN^
-           TRAP ÄÄÄ>³                   ³<ÄÄÄ READY
-        RST 7.5 ÄÄÄ>³                   ³<ÄÄÄ IO/M^
-        RST 6.5 ÄÄÄ>³                   ³<ÄÄÄ S1
-        RST 5.5 ÄÄÄ>³                   ³<ÄÄÄ RD^
-           INTR ÄÄÄ>³       8085A       ³<ÄÄÄ WR^
-          INTA^ ÄÄÄ>³                   ³<ÄÄÄ ALE
-            AD0 ÄÄÄ>³                   ³<ÄÄÄ S0 
-            AD1 ÄÄÄ>³                   ³<ÄÄÄ A15
-            AD2 ÄÄÄ>³                   ³<ÄÄÄ A14
-            AD3 ÄÄÄ>³                   ³<ÄÄÄ A13
-            AD4 ÄÄÄ>³                   ³<ÄÄÄ A12
-            AD5 ÄÄÄ>³                   ³<ÄÄÄ A11
-            AD6 ÄÄÄ>³                   ³<ÄÄÄ A10
-            AD7 ÄÄÄ>³                   ³<ÄÄÄ A9
-            Vss ÄÄÄ>³                   ³<ÄÄÄ A8
-                    ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+                    ----------v---------
+             X1 -->                   <-- Vcc (+5V)
+             X2 -->                   <-- HOLD
+      RESET OUT -->                   <-- HLDA
+            SOD -->                   <-- CLK (OUT)
+            SID -->                   <-- RESET IN^
+           TRAP -->                   <-- READY
+        RST 7.5 -->                   <-- IO/M^
+        RST 6.5 -->                   <-- S1
+        RST 5.5 -->                   <-- RD^
+           INTR -->       8085A       <-- WR^
+          INTA^ -->                   <-- ALE
+            AD0 -->                   <-- S0 
+            AD1 -->                   <-- A15
+            AD2 -->                   <-- A14
+            AD3 -->                   <-- A13
+            AD4 -->                   <-- A12
+            AD5 -->                   <-- A11
+            AD6 -->                   <-- A10
+            AD7 -->                   <-- A9
+            Vss -->                   <-- A8
+                    ---------------------
 
      ^ indicates that, that symbol is written with a
 bar over its name.
 
-  ÚÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-  ³   Pin   ³       Description       ³     Type      ³
-  ÃÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
-  ³ AD0-AD7 ³ Address / Data bus      ³ Bidirection/  ³
-  ³         ³                         ³ Tristate      ³
-  ³ A8-A15  ³ Address Bus             ³ Output/       ³
-  ³         ³                         ³ Tristate      ³
-  ³ ALE     ³ Address Latch Enable    ³ Output/       ³
-  ³         ³                         ³ Tristate      ³
-  ³ RD^     ³ Read Control            ³ Output/       ³
-  ³         ³                         ³ Tristate      ³
-  ³ WR^     ³ Write Control           ³ Output/       ³
-  ³         ³                         ³ Tristate      ³
-  ³ IO/M^   ³ I/O or memory indicator ³ Output/       ³
-  ³         ³                         ³ Tristate      ³
-  ³ S0,S1   ³ Bus State Indicator     ³ Output        ³
-  ³ READY   ³ Wait state request      ³ Input         ³
-  ³ SID     ³ Serial Input Data       ³ Input         ³
-  ³ SOD     ³ Serial Output Data      ³ Output        ³
-  ³ HOLD    ³ HOLD request            ³ Input         ³
-  ³ HLDA    ³ HOLD acknowledge        ³ Output        ³
-  ³ INTR    ³ Interrupt request       ³ Input         ³
-  ³ TRAP    ³ Nonmaskable interrupt   ³ Input         ³
-  ³ RST 5.5 ³ Hardware vector intrpt. ³ Input         ³
-  ³ RST 6.5 ³ Hardware vector intrpt. ³ Input         ³
-  ³ RST 7.5 ³ Hardware vector intrpt. ³ Input         ³
-  ³ INTA^   ³ Interrupt acknowledge   ³ Output        ³
-  ³ RESETIN^³ System reset            ³ Input         ³
-  ³ RESTOUT^³ Peripherals reset       ³ Output        ³
-  ³ X1,X2   ³ Crystal/RC connection   ³ Input         ³
-  ³ CLK(OUT)³ Clock signal            ³ Output        ³
-  ³ Vcc,Vss ³ Power, Ground           ³ -             ³
-  ÀÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+  ----------------------------------------------------
+      Pin           Description             Type      
+  ----------------------------------------------------
+    AD0-AD7   Address / Data bus        Bidirection/   
+                                        Tristate       
+    A8-A15    Address Bus               Output/        
+                                        Tristate       
+    ALE       Address Latch Enable      Output/        
+                                        Tristate       
+    RD^       Read Control              Output/        
+                                        Tristate       
+    WR^       Write Control             Output/        
+                                        Tristate       
+    IO/M^     I/O or memory indicator   Output/        
+                                        Tristate       
+    S0,S1     Bus State Indicator       Output         
+    READY     Wait state request        Input          
+    SID       Serial Input Data         Input          
+    SOD       Serial Output Data        Output         
+    HOLD      HOLD request              Input          
+    HLDA      HOLD acknowledge          Output         
+    INTR      Interrupt request         Input          
+    TRAP      Nonmaskable interrupt     Input          
+    RST 5.5   Hardware vector intrpt.   Input          
+    RST 6.5   Hardware vector intrpt.   Input          
+    RST 7.5   Hardware vector intrpt.   Input          
+    INTA^     Interrupt acknowledge     Output         
+    RESETIN^  System reset              Input          
+    RESTOUT^  Peripherals reset         Output         
+    X1,X2     Crystal/RC connection     Input          
+    CLK(OUT)  Clock signal              Output         
+    Vcc,Vss   Power, Ground             -              
+  -----------------------------------------------------
 
      The low-order address byte and data lines AD0-AD7
 are multiplexed.  At the beginning of a machine cycle
@@ -185,16 +185,16 @@ service the interrupts.  The vector address for an
 interrupt RST n is given by (08xn)H (TRAP is RST 4.5).
 The vector addresses are listed in the following table.
 
-   ÚÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿   ÚÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-   ³Intrpt.³ Vector Addr. ³   ³Intrpt.³ Vector Addr. ³
-   ÃÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´   ÃÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
-   ³ RST 0 ³    0000H     ³   ³ RST 5 ³    0028H     ³
-   ³ RST 1 ³    0008H     ³   ³ RST5.5³    0020H     ³
-   ³ RST 2 ³    0010H     ³   ³ RST 6 ³    0030H     ³
-   ³ RST 3 ³    0018H     ³   ³ RST6.5³    0034H     ³
-   ³ RST 4 ³    0020H     ³   ³ RST 7 ³    0038H     ³
-   ³ TRAP  ³    0024H     ³   ³ RST7.5³    003CH     ³
-   ÀÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ   ÀÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ 
+   -----------------------   -----------------------
+    Intrpt.  Vector Addr.     ï¿½Intrpt.ï¿½ Vector Addr.
+   -----------------------   -----------------------
+     RST 0      0000H         ï¿½ RST 5      0028H
+     RST 1      0008H         ï¿½ RST5.5     0020H
+     RST 2      0010H         ï¿½ RST 6      0030H
+     RST 3      0018H         ï¿½ RST6.5     0034H
+     RST 4      0020H         ï¿½ RST 7      0038H
+     TRAP       0024H         ï¿½ RST7.5     003CH
+   ------------------------   ------------------------ 
 
      The 8085 has the clock generation circuit on the
 chip but an external quartz crystal or LC circuit or
@@ -212,7 +212,7 @@ periods.
 
 
 Instruction execution and data flow in 8085:
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+--------------------------------------------
 
      The program instructions are stored in memory which
 is an external device.  To execute the program in 8085,
@@ -236,7 +236,7 @@ control unit to take further actions.
 
 
 Origin of Software:
-ßßßßßßßßßßßßßßßßßßß
+-------------------
 
      The software is a set of instructions or commands
 needed for performing a specific task by a programmable
@@ -260,7 +260,7 @@ assembly language programs are machine dependent.
 
 
 Instruction Set:
-ßßßßßßßßßßßßßßßß
+----------------
 
      The 8085 has 74 basic instructions and 246
 total instructions.  The instruction set of 8085 is
@@ -281,15 +281,15 @@ or data and then high byte of address or data.
      The 8085 instruction set is divided into the
 following five functional classifications:
 
-               þ  Data Transfer Instructions
-               þ  Arithmetic Instructions
-               þ  Logical Instructions
-               þ  Branching Instructions
-               þ  Machine Control Instructions
+               *  Data Transfer Instructions
+               *  Arithmetic Instructions
+               *  Logical Instructions
+               *  Branching Instructions
+               *  Machine Control Instructions
      
 
 Data Transfer Instructions:
-ßßßßßßßßßßßßßßßßßßßßßßßßßßß
+---------------------------
 
      These instructions includes those which or
 copies data between registers or between memory
@@ -299,7 +299,7 @@ the data transfer is copying operation.
 
 
 Arithmetic Instructions:
-ßßßßßßßßßßßßßßßßßßßßßßßß
+------------------------
 
      These instructions includes those which performs
 the addition, subtraction, increment or decrement
@@ -308,7 +308,7 @@ execution of an instruction by this group.
 
 
 Logical Instructions:
-ßßßßßßßßßßßßßßßßßßßßß
+---------------------
 
      Instructions which performs the logical operations
 like AND, OR, EXCLUSIVE OR, complement, compare and
@@ -318,7 +318,7 @@ instruction in this group.
 
 
 Branching Instructions:
-ßßßßßßßßßßßßßßßßßßßßßßß
+-----------------------
 
      The instructions that are used to transfer the
 program control from one memory location to another
@@ -326,7 +326,7 @@ memory location are grouped under this heading.
 
 
 Machine Control Instructions:
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+-----------------------------
 
      This includes the instructions related to interrupts
 and the instruction used to halt program execution.
