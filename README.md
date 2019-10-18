@@ -6,7 +6,7 @@ Users can enter 8085 microprocessor assembly instructions (opcodes), compile and
 
 # Screenshots
 
-Following screenshots are taken by running the MP8085.EXE (generated years ago) on DOSBOX v0.74-3 on my MacBook Pro.
+Following screenshots were taken by running the MP8085.EXE (generated years ago) on [DOSBOX v0.74-3](https://www.dosbox.com/) on my MacBook Pro.
 
 ### Creating New 8085 Program
 
