@@ -10,4 +10,4 @@ Following screenshots are taken by running the MP8085.EXE (generated years ago) 
 
 ### Creating new 8085 program
 
-[Creating new 8085 program](/Screenshots/1-New-8085-Program.png)
+![Creating new 8085 program](/Screenshots/1-New-8085-Program.png)
