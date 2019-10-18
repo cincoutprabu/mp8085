@@ -27,3 +27,7 @@ Following screenshots were taken by running the MP8085.EXE (generated years ago)
 ### Interactive 8085 Architecture Diagram
 
 ![Interactive 8085 Architecture Diagram](/Screenshots/5-8085-Architecture.png)
+
+# Help File
+
+Help file for the program is located [here](/MP8085.hlp).
